@@ -30,8 +30,13 @@ namespace BizHawk.Client.Common
 		uint ReadU32(long addr, string domain = null);
 
 		void WriteByte(long addr, uint value, string domain = null);
-		void WriteByteRange(long addr, IReadOnlyList<byte> memoryblock, string domain = null);
+		void WriteByteRange(long addr, Span<byte> memoryblock, string domain = null);
 		void WriteFloat(long addr, float value, string domain = null);
+
+		IReadOnlyList<ushort> ReadU16Range(long addr, int count, string domain = null);
+		IReadOnlyList<uint> ReadU32Range(long addr, int count, string domain = null);
+		void WriteU16Range(long addr, Span<ushort> memoryblock, string domain = null);
+		void WriteU32Range(long addr, Span<uint> memoryblock, string domain = null);
 
 		void WriteS8(long addr, int value, string domain = null);
 		void WriteS16(long addr, int value, string domain = null);

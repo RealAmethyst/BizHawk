@@ -120,7 +120,7 @@ namespace BizHawk.Client.Common
 		[LuaMethodExample("memory.write_bytes_as_array(0x100, { 0xAB, 0x12, 0xCD, 0x34 });")]
 		[LuaMethod("write_bytes_as_array", "Writes sequential bytes starting at addr.")]
 		public void WriteBytesAsArray(long addr, LuaTable bytes, string domain = null)
-			=> APIs.Memory.WriteByteRange(addr, _th.EnumerateValues<long>(bytes).Select(l => (byte) l).ToList(), domain);
+			=> APIs.Memory.WriteByteRange(addr, _th.EnumerateValues<long>(bytes).Select(l => (byte) l).ToArray(), domain);
 
 		[LuaMethodExample("memory.write_bytes_as_dict({ [0x100] = 0xAB, [0x104] = 0xCD, [0x106] = 0x12, [0x107] = 0x34, [0x108] = 0xEF });")]
 		[LuaMethod("write_bytes_as_dict", "Writes bytes at arbitrary addresses (the keys of the given table are the addresses, relative to the start of the domain).")]
@@ -130,6 +130,70 @@ namespace BizHawk.Client.Common
 			{
 				APIs.Memory.WriteByte((long) addr, (uint) v, domain);
 			}
+		}
+
+		[LuaMethodExample("local values = memory.read_u16_le_as_array(0x100, 30, \"WRAM\");")]
+		[LuaMethod("read_u16_le_as_array", "Reads count 16-bit values starting at addr into an array-like table (1-indexed).")]
+		public LuaTable ReadUshortsAsArray(long addr, int count, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(false);
+			return _th.ListToTable(APIs.Memory.ReadU16Range(addr, count, domain));
+		}
+
+		[LuaMethodExample("memory.write_u16_le_as_array(0x100, { 0xABCD, 0x1234 });")]
+		[LuaMethod("write_u16_le_as_array", "Writes sequential 16-byte values starting at addr.")]
+		public void WriteUshortsAsArray(long addr, LuaTable values, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(false);
+			APIs.Memory.WriteU16Range(addr, _th.EnumerateValues<long>(values).Select(l => (ushort) l).ToArray(), domain);
+		}
+
+		[LuaMethodExample("local values = memory.read_u16_be_as_array(0x100, 30, \"WRAM\");")]
+		[LuaMethod("read_u16_be_as_array", "Reads count 16-bit values starting at addr into an array-like table (1-indexed).")]
+		public LuaTable ReadUshortsBigAsArray(long addr, int count, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(true);
+			return _th.ListToTable(APIs.Memory.ReadU16Range(addr, count, domain));
+		}
+
+		[LuaMethodExample("memory.write_u16_be_as_array(0x100, { 0xABCD, 0x1234 });")]
+		[LuaMethod("write_u16_be_as_array", "Writes sequential 16-byte values starting at addr.")]
+		public void WriteUshortsAsBigArray(long addr, LuaTable values, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(true);
+			APIs.Memory.WriteU16Range(addr, _th.EnumerateValues<long>(values).Select(l => (ushort) l).ToArray(), domain);
+		}
+
+		[LuaMethodExample("local values = memory.read_u32_le_as_array(0x100, 30, \"WRAM\");")]
+		[LuaMethod("read_u32_le_as_array", "Reads count 32-bit values starting at addr into an array-like table (1-indexed).")]
+		public LuaTable ReadUintsAsArray(long addr, int count, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(false);
+			return _th.ListToTable(APIs.Memory.ReadU32Range(addr, count, domain));
+		}
+
+		[LuaMethodExample("memory.write_u32_le_as_array(0x100, { 0xABCD, 0x1234 });")]
+		[LuaMethod("write_u32_le_as_array", "Writes sequential 32-byte values starting at addr.")]
+		public void WriteUintsAsArray(long addr, LuaTable values, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(false);
+			APIs.Memory.WriteU32Range(addr, _th.EnumerateValues<long>(values).Select(l => (uint) l).ToArray(), domain);
+		}
+
+		[LuaMethodExample("local values = memory.read_u32_be_as_array(0x100, 30, \"WRAM\");")]
+		[LuaMethod("read_u32_be_as_array", "Reads count 32-bit values starting at addr into an array-like table (1-indexed).")]
+		public LuaTable ReadUintsBigAsArray(long addr, int count, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(true);
+			return _th.ListToTable(APIs.Memory.ReadU32Range(addr, count, domain));
+		}
+
+		[LuaMethodExample("memory.write_u32_be_as_array(0x100, { 0xABCD, 0x1234 });")]
+		[LuaMethod("write_u32_be_as_array", "Writes sequential 32-byte values starting at addr.")]
+		public void WriteUintsBigAsArray(long addr, LuaTable values, string domain = null)
+		{
+			APIs.Memory.SetBigEndian(true);
+			APIs.Memory.WriteU32Range(addr, _th.EnumerateValues<long>(values).Select(l => (uint) l).ToArray(), domain);
 		}
 
 		[LuaMethodExample("""

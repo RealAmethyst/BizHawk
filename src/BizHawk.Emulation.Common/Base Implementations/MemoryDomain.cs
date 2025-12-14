@@ -102,6 +102,18 @@ namespace BizHawk.Emulation.Common
 			}
 		}
 
+		public virtual void BulkPokeByte(long startAddress, Span<byte> values)
+		{
+			using (this.EnterExit())
+			{
+				long address = startAddress;
+				for (var i = 0; i < values.Length; i++, address++)
+				{
+					 PokeByte(address, values[i]);
+				}
+			}
+		}
+
 		public virtual void BulkPeekUshort(Range<long> addresses, bool bigEndian, ushort[] values)
 		{
 			if (addresses is null) throw new ArgumentNullException(paramName: nameof(addresses));
@@ -120,6 +132,18 @@ namespace BizHawk.Emulation.Common
 			}
 		}
 
+		public virtual void BulkPokeUshort(long startAddress, bool bigEndian, Span<ushort> values)
+		{
+			using (this.EnterExit())
+			{
+				long address = startAddress;
+				for (var i = 0; i < values.Length; i++, address += sizeof(ushort))
+				{
+					 PokeUshort(address, values[i], bigEndian);
+				}
+			}
+		}
+
 		public virtual void BulkPeekUint(Range<long> addresses, bool bigEndian, uint[] values)
 		{
 			if (addresses is null) throw new ArgumentNullException(paramName: nameof(addresses));
@@ -134,6 +158,18 @@ namespace BizHawk.Emulation.Common
 				for (var i = 0; i < values.Length; i++, start += sizeof(uint))
 				{
 					values[i] = PeekUint(start, bigEndian);
+				}
+			}
+		}
+
+		public virtual void BulkPokeUint(long startAddress, bool bigEndian, Span<uint> values)
+		{
+			using (this.EnterExit())
+			{
+				long address = startAddress;
+				for (var i = 0; i < values.Length; i++, address += sizeof(uint))
+				{
+					 PokeUint(address, values[i], bigEndian);
 				}
 			}
 		}

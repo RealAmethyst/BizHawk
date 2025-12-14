@@ -338,7 +338,7 @@ namespace BizHawk.Emulation.Cores.Waterbox
 				_read8.Access((IntPtr)p, addresses.Start, (long)addresses.Count());
 		}
 
-		public void BulkPokeByte(long addr, Span<byte> values)
+		public override void BulkPokeByte(long addr, Span<byte> values)
 		{
 			if ((ulong)addr + (ulong)values.Length > (ulong)Size || addr < 0) throw new ArgumentOutOfRangeException(nameof(addr), message: AddressRangeError);
 

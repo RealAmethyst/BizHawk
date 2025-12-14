@@ -264,7 +264,7 @@ namespace BizHawk.Client.Common
 			return newBytes;
 		}
 
-		public void WriteByteRange(long addr, IReadOnlyList<byte> memoryblock, string domain = null)
+		public void WriteByteRange(long addr, Span<byte> memoryblock, string domain = null)
 		{
 			var d = NamedDomainOrCurrent(domain);
 			if (!d.Writable)
@@ -273,15 +273,83 @@ namespace BizHawk.Client.Common
 				return;
 			}
 			if (addr < 0) LogCallback($"Warning: Attempted writes on addresses {addr}..-1 outside range of domain {d.Name} in {nameof(WriteByteRange)}()");
-			var lastReqAddr = addr + memoryblock.Count - 1;
-			var indexAfterLast = Math.Min(Math.Max(-1L, lastReqAddr), d.Size - 1L) + 1L;
 			var iDst = Math.Min(Math.Max(0L, addr), d.Size);
 			var iSrc = checked((int) (iDst - addr));
-			using (d.EnterExit())
+			var lastReqAddrExclusive = addr + memoryblock.Length;
+			var lastAddressExclusive = Math.Min(Math.Max(0, lastReqAddrExclusive), d.Size);
+			var length = lastAddressExclusive - iDst;
+			if (length > 0) using (d.EnterExit()) d.BulkPokeByte(iDst, memoryblock.Slice(start: iSrc, length: (int)length));
+			if (lastReqAddrExclusive > d.Size) LogCallback($"Warning: Attempted writes on addresses {d.Size}..{lastReqAddrExclusive} outside range of domain {d.Name} in {nameof(WriteByteRange)}()");
+		}
+
+		public IReadOnlyList<ushort> ReadU16Range(long addr, int count, string domain = null)
+		{
+			var d = NamedDomainOrCurrent(domain);
+			if (addr < 0) LogCallback($"Warning: Attempted reads on addresses {addr}..-1 outside range of domain {d.Name} in {nameof(ReadU16Range)}()");
+			var lastReqAddr = addr + count * sizeof(ushort) - 1;
+			var indexAfterLast = Math.Min(Math.Max(-1L, lastReqAddr), d.Size - 1L) + 1L;
+			var iSrc = Math.Min(Math.Max(0L, addr), d.Size);
+			var iDst = (iSrc - addr) / sizeof(ushort);
+			var values = new ushort[(indexAfterLast - iSrc) / sizeof(ushort)];
+			if (iSrc < indexAfterLast) using (d.EnterExit()) d.BulkPeekUshort(iSrc.RangeToExclusive(indexAfterLast), _isBigEndian, values);
+			if (lastReqAddr >= d.Size) LogCallback($"Warning: Attempted reads on addresses {d.Size}..{lastReqAddr} outside range of domain {d.Name} in {nameof(ReadU16Range)}()");
+			if (values.Length == count) return values;
+			var newValues = new ushort[count];
+			if (values.Length is not 0) Array.Copy(sourceArray: values, sourceIndex: 0, destinationArray: newValues, destinationIndex: iDst, length: values.Length);
+			return newValues;
+		}
+
+		public void WriteU16Range(long addr, Span<ushort> memoryblock, string domain = null)
+		{
+			var d = NamedDomainOrCurrent(domain);
+			if (!d.Writable)
 			{
-				while (iDst < indexAfterLast) d.PokeByte(iDst++, memoryblock[iSrc++]);
+				LogCallback($"Error: the domain {d.Name} is not writable");
+				return;
 			}
-			if (lastReqAddr >= d.Size) LogCallback($"Warning: Attempted writes on addresses {d.Size}..{lastReqAddr} outside range of domain {d.Name} in {nameof(WriteByteRange)}()");
+			if (addr < 0) LogCallback($"Warning: Attempted writes on addresses {addr}..-1 outside range of domain {d.Name} in {nameof(WriteU16Range)}()");
+			var iDst = Math.Min(Math.Max(0L, addr), d.Size);
+			var iSrc = checked((int) (iDst - addr)) / sizeof(ushort);
+			var lastReqAddrExclusive = addr + memoryblock.Length * sizeof(ushort);
+			var lastAddressExclusive = Math.Min(Math.Max(0, lastReqAddrExclusive), d.Size);
+			var length = lastAddressExclusive - iDst;
+			if (length > 0) using (d.EnterExit()) d.BulkPokeUshort(iDst, _isBigEndian, memoryblock.Slice(start: iSrc, length: (int)(length / sizeof(ushort))));
+			if (lastReqAddrExclusive >= d.Size) LogCallback($"Warning: Attempted writes on addresses {d.Size}..{lastReqAddrExclusive} outside range of domain {d.Name} in {nameof(WriteU16Range)}()");
+		}
+
+		public IReadOnlyList<uint> ReadU32Range(long addr, int count, string domain = null)
+		{
+			var d = NamedDomainOrCurrent(domain);
+			if (addr < 0) LogCallback($"Warning: Attempted reads on addresses {addr}..-1 outside range of domain {d.Name} in {nameof(ReadU32Range)}()");
+			var lastReqAddr = addr + count * sizeof(uint) - 1;
+			var indexAfterLast = Math.Min(Math.Max(-1L, lastReqAddr), d.Size - 1L) + 1L;
+			var iSrc = Math.Min(Math.Max(0L, addr), d.Size);
+			var iDst = (iSrc - addr) / sizeof(uint);
+			var values = new uint[(indexAfterLast - iSrc) / sizeof(uint)];
+			if (iSrc < indexAfterLast) using (d.EnterExit()) d.BulkPeekUint(iSrc.RangeToExclusive(indexAfterLast), _isBigEndian, values);
+			if (lastReqAddr >= d.Size) LogCallback($"Warning: Attempted reads on addresses {d.Size}..{lastReqAddr} outside range of domain {d.Name} in {nameof(ReadU32Range)}()");
+			if (values.Length == count) return values;
+			var newValues = new uint[count];
+			if (values.Length is not 0) Array.Copy(sourceArray: values, sourceIndex: 0, destinationArray: newValues, destinationIndex: iDst, length: values.Length);
+			return newValues;
+		}
+
+		public void WriteU32Range(long addr, Span<uint> memoryblock, string domain = null)
+		{
+			var d = NamedDomainOrCurrent(domain);
+			if (!d.Writable)
+			{
+				LogCallback($"Error: the domain {d.Name} is not writable");
+				return;
+			}
+			if (addr < 0) LogCallback($"Warning: Attempted writes on addresses {addr}..-1 outside range of domain {d.Name} in {nameof(WriteU32Range)}()");
+			var iDst = Math.Min(Math.Max(0L, addr), d.Size);
+			var iSrc = checked((int) (iDst - addr)) / sizeof(uint);
+			var lastReqAddrExclusive = addr + memoryblock.Length * sizeof(uint);
+			var lastAddressExclusive = Math.Min(Math.Max(0, lastReqAddrExclusive), d.Size);
+			var length = lastAddressExclusive - iDst;
+			if (length > 0) using (d.EnterExit()) d.BulkPokeUint(iDst, _isBigEndian, memoryblock.Slice(start: iSrc, length: (int)(length / sizeof(uint))));
+			if (lastReqAddrExclusive >= d.Size) LogCallback($"Warning: Attempted writes on addresses {d.Size}..{lastReqAddrExclusive} outside range of domain {d.Name} in {nameof(WriteU32Range)}()");
 		}
 
 		public float ReadFloat(long addr, string domain = null)
