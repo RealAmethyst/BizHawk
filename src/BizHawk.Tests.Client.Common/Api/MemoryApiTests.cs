@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BizHawk.Common;
 using BizHawk.Client.Common;
 using BizHawk.Emulation.Common;
+using BizHawk.Common.CollectionExtensions;
 
 namespace BizHawk.Tests.Client.Common.Api
 {
@@ -19,7 +20,7 @@ namespace BizHawk.Tests.Client.Common.Api
 			};
 
 		[TestMethod]
-		public void TestBulkPeek()
+		public void TestBulkPeekByte()
 		{
 			var memApi = CreateDummyApi(new byte[] { 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF });
 			CollectionAssert.That.AreEqual(
@@ -57,7 +58,7 @@ namespace BizHawk.Tests.Client.Common.Api
 		}
 
 		[TestMethod]
-		public void TestBulkPoke()
+		public void TestBulkPokeByte()
 		{
 			void TestCase(IReadOnlyList<byte> expected, Action<IMemoryApi> action, string message)
 			{
@@ -96,6 +97,182 @@ namespace BizHawk.Tests.Client.Common.Api
 			TestCase(
 				new byte[8],
 				memApi => memApi.WriteByteRange(9, new byte[] { 0x01, 0x23, 0x45, 0x67 }),
+				"fully above upper boundary");
+		}
+
+		[TestMethod]
+		public void TestBulkPeekUshort()
+		{
+			ushort[] memContents = new ushort[] { 0x0123, 0x4567, 0x89AB, 0xCDEF };
+			byte[] memBytes = new byte[8];
+			memContents.BytesSpan().CopyTo(memBytes);
+
+			var memApi = CreateDummyApi(memBytes);
+			CollectionAssert.That.AreEqual(
+				new ushort[] { default, default },
+				memApi.ReadU16Range(addr: -6, count: 2),
+				"fully below lower boundary");
+			CollectionAssert.That.AreEqual(
+				new ushort[] { default, 0x0123 },
+				memApi.ReadU16Range(addr: -2, count: 2),
+				"crosses lower boundary");
+			CollectionAssert.That.AreEqual(
+				new ushort[] { default, 0x0123, 0x4567, 0x89AB, 0xCDEF, default },
+				memApi.ReadU16Range(addr: -2, count: 6),
+				"crosses both boundaries");
+			CollectionAssert.That.AreEqual(
+				new ushort[] { 0x0123, 0x4567, 0x89AB, 0xCDEF },
+				memApi.ReadU16Range(addr: 0, count: 4),
+				"whole domain");
+			CollectionAssert.That.AreEqual(
+				new ushort[] { 0x4567, 0x89AB, 0xCDEF },
+				memApi.ReadU16Range(addr: 2, count: 3),
+				"strict contains");
+			CollectionAssert.That.AreEqual(
+				Array.Empty<ushort>(),
+				memApi.ReadU16Range(addr: 2, count: 0),
+				"empty");
+			CollectionAssert.That.AreEqual(
+				new ushort[] { 0xCDEF, default },
+				memApi.ReadU16Range(addr: 6, count: 2),
+				"crosses upper boundary");
+			CollectionAssert.That.AreEqual(
+				new ushort[] { default, default },
+				memApi.ReadU16Range(addr: 8, count: 2),
+				"fully above upper boundary");
+		}
+
+		[TestMethod]
+		public void TestBulkPokeUshort()
+		{
+			unsafe void TestCase(IReadOnlyList<ushort> expected, Action<IMemoryApi> action, string message)
+			{
+				var memDomainContents = new byte[8];
+				action(CreateDummyApi(memDomainContents));
+				ushort[] memUshorts = new ushort[4];
+				memDomainContents.CopyTo(memUshorts.BytesSpan());
+
+				CollectionAssert.That.AreEqual(expected, memUshorts, message);
+			}
+			TestCase(
+				new ushort[4],
+				memApi => memApi.WriteU16Range(-4, new ushort[] { 0x0123, 0x4567 }),
+				"fully below lower boundary");
+			TestCase(
+				new ushort[] { 0x4567, default, default, default },
+				memApi => memApi.WriteU16Range(-2, new ushort[] { 0x0123, 0x4567 }),
+				"crosses lower boundary");
+			TestCase(
+				new ushort[] { 0x4567, 0x89AB, 0xCDEF, 0xFEDC },
+				memApi => memApi.WriteU16Range(-2, new ushort[] { 0x0123, 0x4567, 0x89AB, 0xCDEF, 0xFEDC, 0xBA98 }),
+				"crosses both boundaries");
+			TestCase(
+				new ushort[] { 0x0123, 0x4567, 0x89AB, 0xCDEF },
+				memApi => memApi.WriteU16Range(0, new ushort[] { 0x0123, 0x4567, 0x89AB, 0xCDEF }),
+				"whole domain");
+			TestCase(
+				new ushort[] { default, 0x0123, 0x4567, 0x89AB },
+				memApi => memApi.WriteU16Range(2, new ushort[] { 0x0123, 0x4567, 0x89AB }),
+				"strict contains");
+			TestCase(
+				new ushort[4],
+				memApi => memApi.WriteU16Range(2, Array.Empty<ushort>()),
+				"empty");
+			TestCase(
+				new ushort[] { default, default, default, 0x0123 },
+				memApi => memApi.WriteU16Range(6, new ushort[] { 0x0123, 0x4567 }),
+				"crosses upper boundary");
+			TestCase(
+				new ushort[4],
+				memApi => memApi.WriteU16Range(8, new ushort[] { 0x0123, 0x4567 }),
+				"fully above upper boundary");
+		}
+
+		[TestMethod]
+		public void TestBulkPeekUint()
+		{
+			uint[] memContents = new uint[] { 0x01234567, 0x89ABCDEF };
+			byte[] memBytes = new byte[8];
+			memContents.BytesSpan().CopyTo(memBytes);
+
+			var memApi = CreateDummyApi(memBytes);
+			CollectionAssert.That.AreEqual(
+				new uint[] { default, default },
+				memApi.ReadU32Range(addr: -10, count: 2),
+				"fully below lower boundary");
+			CollectionAssert.That.AreEqual(
+				new uint[] { default, 0x01234567 },
+				memApi.ReadU32Range(addr: -4, count: 2),
+				"crosses lower boundary");
+			CollectionAssert.That.AreEqual(
+				new uint[] { default, 0x01234567, 0x89ABCDEF, default },
+				memApi.ReadU32Range(addr: -4, count: 4),
+				"crosses both boundaries");
+			CollectionAssert.That.AreEqual(
+				new uint[] { 0x01234567, 0x89ABCDEF },
+				memApi.ReadU32Range(addr: 0, count: 2),
+				"whole domain");
+			CollectionAssert.That.AreEqual(
+				new uint[] { 0x89ABCDEF },
+				memApi.ReadU32Range(addr: 4, count: 1),
+				"strict contains");
+			CollectionAssert.That.AreEqual(
+				Array.Empty<uint>(),
+				memApi.ReadU32Range(addr: 0, count: 0),
+				"empty");
+			CollectionAssert.That.AreEqual(
+				new uint[] { 0x89ABCDEF, default },
+				memApi.ReadU32Range(addr: 4, count: 2),
+				"crosses upper boundary");
+			CollectionAssert.That.AreEqual(
+				new uint[] { default, default },
+				memApi.ReadU32Range(addr: 8, count: 2),
+				"fully above upper boundary");
+		}
+
+		[TestMethod]
+		public void TestBulkPokeUint()
+		{
+			unsafe void TestCase(IReadOnlyList<uint> expected, Action<IMemoryApi> action, string message)
+			{
+				var memDomainContents = new byte[8];
+				action(CreateDummyApi(memDomainContents));
+				uint[] memUints = new uint[2];
+				memDomainContents.CopyTo(memUints.BytesSpan());
+
+				CollectionAssert.That.AreEqual(expected, memUints, message);
+			}
+			TestCase(
+				new uint[2],
+				memApi => memApi.WriteU32Range(-8, new uint[] { 0x01234567, 0x89ABCDEF }),
+				"fully below lower boundary");
+			TestCase(
+				new uint[] { 0x89ABCDEF, default },
+				memApi => memApi.WriteU32Range(-4, new uint[] { 0x01234567, 0x89ABCDEF }),
+				"crosses lower boundary");
+			TestCase(
+				new uint[] { 0x89ABCDEF, 0xFEDCBA98 },
+				memApi => memApi.WriteU32Range(-4, new uint[] { 0x01234567, 0x89ABCDEF, 0xFEDCBA98, 0x76543210 }),
+				"crosses both boundaries");
+			TestCase(
+				new uint[] { 0x01234567, 0x89ABCDEF },
+				memApi => memApi.WriteU32Range(0, new uint[] { 0x01234567, 0x89ABCDEF }),
+				"whole domain");
+			TestCase(
+				new uint[] { default, 0x01234567 },
+				memApi => memApi.WriteU32Range(4, new uint[] { 0x01234567 }),
+				"strict contains");
+			TestCase(
+				new uint[2],
+				memApi => memApi.WriteU32Range(0, Array.Empty<uint>()),
+				"empty");
+			TestCase(
+				new uint[] { default, 0x01234567 },
+				memApi => memApi.WriteU32Range(4, new uint[] { 0x01234567, 0x89ABCDEF }),
+				"crosses upper boundary");
+			TestCase(
+				new uint[2],
+				memApi => memApi.WriteU32Range(8, new uint[] { 0x01234567, 0x89ABCDEF }),
 				"fully above upper boundary");
 		}
 
