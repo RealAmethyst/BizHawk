@@ -1234,3 +1234,42 @@ index f78bfbd..5162da8 100644
 +  g_free (state->fds);
 +  g_free (state);
  }
+--- a/UiaAtkBridge/UiaAtkBridge/TextProviderTextImplementor.cs
++++ b/UiaAtkBridge/UiaAtkBridge/TextProviderTextImplementor.cs
+@@ -25,6 +25,7 @@
+ 
+ using System;
+ using System.Drawing;
++using System.Globalization;
+ using Mono.UIAutomation.Bridge;
+ using System.Windows.Automation;
+ using Mono.UIAutomation.Services;
+@@ -261,15 +262,17 @@
+ 				else
+ 					val = "single";
+ 				break;
++			// Mono line indents are boxed Single values; UIA also permits Double.
++			// Convert to pixel integers instead of unboxing them as Int32.
+ 			case Atk.TextAttribute.PixelsBelowLines:
+ 				if (IsAttrNotNullOrMultiValued (TextPattern.IndentationTrailingAttribute.Id,
+ 				                                textRange, out tmp))
+-					val = ((int) tmp).ToString ();
++					val = Convert.ToInt32 (tmp).ToString (CultureInfo.InvariantCulture);
+ 				break;
+ 			case Atk.TextAttribute.PixelsAboveLines:
+ 				if (IsAttrNotNullOrMultiValued (TextPattern.IndentationLeadingAttribute.Id,
+ 				                                textRange, out tmp))
+-					val = ((int) tmp).ToString ();
++					val = Convert.ToInt32 (tmp).ToString (CultureInfo.InvariantCulture);
+ 				break;
+ 			case Atk.TextAttribute.Editable:
+ 				if (IsAttrNotNullOrMultiValued (TextPattern.IsReadOnlyAttribute.Id,
+@@ -284,7 +287,7 @@
+ 			case Atk.TextAttribute.Indent:
+ 				if (IsAttrNotNullOrMultiValued (TextPattern.IndentationFirstLineAttribute.Id,
+ 				                                textRange, out tmp))
+-					val = ((int) tmp).ToString ();
++					val = Convert.ToInt32 (tmp).ToString (CultureInfo.InvariantCulture);
+ 				break;
+ 			}
+ 			

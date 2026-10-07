@@ -1,4 +1,10 @@
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+
+using BizHawk.Common;
 
 namespace BizHawk.Client.Common
 {
@@ -79,6 +85,9 @@ namespace BizHawk.Client.Common
 		[DllImport("prism", EntryPoint = "prism_backend_stop", CallingConvention = CallingConvention.Cdecl)]
 		private static extern int PrismBackendStop(IntPtr backend);
 
+		[DllImport("prism", EntryPoint = "prism_error_string", CallingConvention = CallingConvention.Cdecl)]
+		private static extern IntPtr PrismErrorString(int error);
+
 		private const int PRISM_OK = 0;
 		private const int PRISM_ERROR_ALREADY_INITIALIZED = 15; // prism_registry_acquire_best already returns an initialised backend
 
@@ -86,6 +95,25 @@ namespace BizHawk.Client.Common
 		private static bool _tried;
 		private static IntPtr _backend;
 		private static string _initError;
+
+		private static readonly Lazy<BlockingCollection<Action>> UnixSpeechQueue = new(() =>
+		{
+			var queue = new BlockingCollection<Action>();
+			new Thread(() =>
+			{
+				foreach (var action in queue.GetConsumingEnumerable()) action();
+			}) { IsBackground = true, Name = "Prism speech" }.Start();
+			return queue;
+		});
+
+		private static readonly Lazy<Action<WaitHandle>> UnixSpeechWait = new(() =>
+		{
+			var bridge = AppDomain.CurrentDomain.GetAssemblies()
+				.FirstOrDefault(a => a.GetName().Name == "UiaAtkBridge");
+			var method = bridge?.GetType("UiaAtkBridge.WinFormsMainLoop")?.GetMethod("WaitForSpeech");
+			return method is null ? completion => completion.WaitOne()
+				: (Action<WaitHandle>)Delegate.CreateDelegate(typeof(Action<WaitHandle>), method);
+		});
 
 		private static bool EnsureInit(out string error)
 		{
@@ -119,32 +147,42 @@ namespace BizHawk.Client.Common
 			}
 		}
 
-		public static bool Speak(string text, bool interrupt, out string error)
+		private static string Execute(Func<int> operation)
 		{
-			if (!EnsureInit(out error)) return false;
-			try { return PrismBackendSpeak(_backend, text, interrupt) == PRISM_OK; }
-			catch (Exception ex) { error = ex.Message; return false; }
+			try
+			{
+				if (!EnsureInit(out var error)) return error;
+				var result = operation();
+				return result == PRISM_OK ? null : $"{Marshal.PtrToStringAnsi(PrismErrorString(result))} ({result})";
+			}
+			catch (Exception ex) { return ex.Message; }
 		}
+
+		private static bool Invoke(Func<int> operation, out string error)
+		{
+			if (OSTailoredCode.IsUnixHost)
+			{
+				// Keep native calls on one worker, including initialization. Waiting pumps
+				// only AT-SPI, so Orca can call back without reentering Lua or a frame.
+				var completion = new TaskCompletionSource<string>();
+				UnixSpeechQueue.Value.Add(() => completion.SetResult(Execute(operation)));
+				using (var handle = ((IAsyncResult)completion.Task).AsyncWaitHandle) UnixSpeechWait.Value(handle);
+				error = completion.Task.Result;
+			}
+			else error = Execute(operation);
+			return error is null;
+		}
+
+		public static bool Speak(string text, bool interrupt, out string error)
+			=> Invoke(() => PrismBackendSpeak(_backend, text, interrupt), out error);
 
 		public static bool Output(string text, bool interrupt, out string error)
-		{
-			if (!EnsureInit(out error)) return false;
-			try { return PrismBackendOutput(_backend, text, interrupt) == PRISM_OK; }
-			catch (Exception ex) { error = ex.Message; return false; }
-		}
+			=> Invoke(() => PrismBackendOutput(_backend, text, interrupt), out error);
 
 		public static bool Braille(string text, out string error)
-		{
-			if (!EnsureInit(out error)) return false;
-			try { return PrismBackendBraille(_backend, text) == PRISM_OK; }
-			catch (Exception ex) { error = ex.Message; return false; }
-		}
+			=> Invoke(() => PrismBackendBraille(_backend, text), out error);
 
 		public static bool Stop(out string error)
-		{
-			if (!EnsureInit(out error)) return false;
-			try { return PrismBackendStop(_backend) == PRISM_OK; }
-			catch (Exception ex) { error = ex.Message; return false; }
-		}
+			=> Invoke(() => PrismBackendStop(_backend), out error);
 	}
 }

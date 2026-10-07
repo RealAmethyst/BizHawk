@@ -14,9 +14,9 @@ if [ ! -f "$archive" ]; then
 	curl --fail --location --show-error "https://github.com/ethindp/prism/archive/$revision.tar.gz" -o "$archive"
 fi
 printf '%s  %s\n' "$archive_sha256" "$archive" | sha256sum -c -
-if [ ! -d "$work/prism-$revision" ]; then
-	tar -xzf "$archive" -C "$work"
-fi
+# Restore verified upstream source, with fresh timestamps so the compiler
+# cannot reuse objects from locally modified sources on incremental rebuilds.
+tar -mxzf "$archive" -C "$work"
 cmake -S "$work/prism-$revision" -B "$work/build" -G Ninja \
 	-DCMAKE_BUILD_TYPE=Release -DPRISM_ENABLE_GDEXTENSION=OFF \
 	-DPRISM_ENABLE_TESTS=OFF -DPRISM_ENABLE_DEMOS=OFF

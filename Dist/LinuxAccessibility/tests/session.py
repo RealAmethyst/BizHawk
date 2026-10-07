@@ -9,7 +9,7 @@ import tempfile
 import time
 
 @contextmanager
-def test_session(kind):
+def test_session(kind, fixture='accessibility-fixture.lua'):
     package = Path(sys.argv[1]).resolve()
     sources = Path(__file__).parent
     children = []
@@ -36,9 +36,10 @@ def test_session(kind):
                     command = ['mono', str(exe)]
                 else:
                     script = work / 'accessibility-fixture.lua'
-                    shutil.copy2(sources / script.name, script)
+                    shutil.copy2(sources / fixture, script)
                     command = ['mono', str(package / 'EmuHawk.exe'), '--gdi', '--config=' + str(work / 'config.ini'), '--lua=' + str(script)]
-                app = subprocess.Popen(command, cwd=package, stdout=log, stderr=subprocess.STDOUT)
+                app = subprocess.Popen(command, cwd=package, stdout=log, stderr=subprocess.STDOUT,
+                                       env={**os.environ, 'BIZHAWK_TEST_DIRECTORY': str(work)})
                 children.append(app)
                 time.sleep(0.5)
                 yield (work, app)

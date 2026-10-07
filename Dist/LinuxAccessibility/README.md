@@ -13,6 +13,7 @@ UIA2ATK is pinned to `5ddfe947cec456315d7d91421f21c31c4afa6765` and GtkSharp to 
 - Use the current AT-SPI2 adaptor API instead of loading a GTK2 module.
 - Run GLib dispatch and all provider access on the WinForms UI thread. A background thread waits on GLib's file descriptors and posts ready work to the UI context. There is no periodic control-tree scan.
 - Service ready AT-SPI requests during the emulator's throttle waits, using a deadline and an event signalled by that worker. This is the Linux equivalent of the fork's Windows COM-aware wait. It does not pump WinForms input or reenter emulation. Queued UI callbacks skip already-serviced work.
+- Service AT-SPI while waiting for the dedicated speech worker. Orca can query the application while handling speech; a synchronous native call on the UI thread would block that query. The completion event ends the wait immediately, without polling or processing another emulator frame.
 - Marshal ATK value text as an output string and selected-row arrays as pointers, matching the native `gchar **` and `gint **` APIs.
 - Map data rows independently of column headers and use zero-based ATK child indices. Forward cell name changes as well as value changes.
 - Queue button and menu invocations through WinForms so modal dialogs cannot block AT-SPI dispatch.
@@ -20,6 +21,7 @@ UIA2ATK is pinned to `5ddfe947cec456315d7d91421f21c31c4afa6765` and GtkSharp to 
 - Keep combo item providers alive with their actual collection; collapsing a popup does not destroy its selected item's identity. Preserve control labels separately from selection values.
 - Construct lazy accessible ancestry from the parent down and handle detached providers safely.
 - Preserve text-box and slider accessible names.
+- Convert Mono's floating-point text indents to ATK pixel values. Unboxing those values as integers previously crashed the process when Orca requested rich-text formatting, including while reading Lua Console output.
 - Restore bare-Alt menu activation on Mono 6.12. Its X11 prefilter clears the Alt state before constructing the key-release message. The bridge calls Mono's verified native menu handler only for an unmodified Alt tap; shortcuts, AltGr, and menu dismissal keep their normal handling.
 
 ## Source and replacement libraries

@@ -82,6 +82,30 @@ namespace UiaAtkBridge
 			}
 		}
 
+		// Orca can query AT-SPI while handling a speech request. The native speech
+		// call runs on a worker; keep answering those queries until it completes.
+		public static void WaitForSpeech(WaitHandle completion)
+		{
+			var loop = current;
+			if (loop == null || loop.stopped || Thread.CurrentThread.ManagedThreadId != UiThreadId || loop.dispatching)
+			{
+				completion.WaitOne();
+				return;
+			}
+			var handles = new[] { completion, loop.ready };
+			loop.responsiveWaiting = true;
+			try
+			{
+				while (!loop.stopped && WaitHandle.WaitAny(handles) == 1) loop.Dispatch(null);
+				completion.WaitOne();
+			}
+			finally
+			{
+				loop.responsiveWaiting = false;
+				if (!loop.stopped && loop.ready.WaitOne(0)) loop.context.Post(loop.Dispatch, null);
+			}
+		}
+
 		public bool PreFilterMessage(ref Message message)
 		{
 			const int KeyDown = 0x100, KeyUp = 0x101, SysKeyDown = 0x104, SysKeyUp = 0x105;

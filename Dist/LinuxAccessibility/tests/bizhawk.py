@@ -107,6 +107,28 @@ with test_session('bizhawk') as (w, p):
     pump(0.3)
     assert 'accessibility command test' in Atspi.Text.get_text(output, 0, -1)
     print('LUA COMMAND PASSED', flush=True)
+    # Orca requests formatting while reading/cursoring through a RichTextBox.
+    # Text alone succeeds even when those requests crash the bridge.
+    defaults = Atspi.Text.get_default_attributes(output)
+    assert defaults['indent'] == '0', defaults
+    count = Atspi.Text.get_character_count(output)
+    for offset in (0, count // 2, count - 1, count):
+        attributes, start, end = Atspi.Text.get_attribute_run(output, offset, True)
+        assert start <= offset <= end, (offset, start, end)
+    assert output.get_component_iface().grab_focus()
+    key('Control_L', 'End')
+    end_caret = Atspi.Text.get_caret_offset(output)
+    key('Up')
+    assert Atspi.Text.get_caret_offset(output) < end_caret
+    key('Down')
+    assert Atspi.Text.get_caret_offset(output) == end_caret
+    key('Control_L', 'Home')
+    assert Atspi.Text.get_caret_offset(output) == 0
+    key('Shift_L', 'Down')
+    assert Atspi.Text.get_n_selections(output) == 1
+    assert Atspi.Text.get_default_attributes(output)['indent'] == '0'
+    assert p.poll() is None
+    print('LUA OUTPUT FORMATTING AND KEYBOARD READING PASSED', flush=True)
     assert not any((word in (w / 'probe.log').read_text() for word in ('Unhandled Exception', 'Exception in Gtk#')))
     focus_window(main.get_name())
     assert file.get_action_iface().do_action(0)

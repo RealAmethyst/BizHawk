@@ -24,6 +24,14 @@ Frame-throttle waits service accessibility requests on the UI thread, as the Win
 
 Some other custom-painted tools, such as TAS input grids, still lack accessible rows. This work is not a claim that every advanced BizHawk tool is accessible. Amethyst's general accessibility approval does not establish coverage of every controller, core, or advanced tool.
 
+## Lua speech
+
+Existing scripts use the same `speech.say`, `speech.output`, `speech.braille`, and `speech.stop` API. Prism tries Orca before Speech Dispatcher. Linux speech calls run on a dedicated worker while the UI thread continues answering AT-SPI queries. This prevents a circular wait when Orca needs information from BizHawk before replying to a speech request. Calls retain their order and finish before Lua continues; no emulator frames or keyboard input are dispatched by this wait.
+
+Native speech errors are reported in the Lua Console instead of an empty failure message.
+
+Amethyst confirmed the Orca speech fix and Lua Console output navigation on October 7, 2026. The bridge correctly converts Mono's text-formatting values when Orca queries the log; these queries previously crashed the emulator.
+
 ## Safe defaults
 
 Hotkey defaults match the `config.ini` in RealAmethyst/BizHawk's Windows release `v1.1`. The 58 shortcuts cleared in that release are cleared in source. Both a new config and Restore Defaults use this map. Explicit user bindings remain unchanged when existing configurations load.
@@ -45,7 +53,7 @@ Dist/TestLinuxAccessibility.sh
 Dist/Package.sh
 ```
 
-The AT-SPI checks need Xvfb, Python GObject bindings for AT-SPI2, libXtst, and dbus-run-session. They create isolated displays and D-Bus sessions, use temporary configuration files, and load no ROM. Their Lua fixture only prints and yields. They verify controls, keyboard menu navigation, file dialogs, Lua script selection and status, command input and output, and clean exit. `XVFB` and `ATSPI_REGISTRY` can point to nonstandard executable locations.
+The AT-SPI checks need Xvfb, Python GObject bindings for AT-SPI2, libXtst, and dbus-run-session. They create isolated displays and D-Bus sessions, use temporary configuration files, and load no ROM. They verify controls, keyboard menu navigation, file dialogs, Lua script selection and status, command input and output, and clean exit. A mock Orca service queries BizHawk through AT-SPI during initialization, speech, and stop requests, checking responsiveness, message order, and error reporting without emitting audio. `XVFB` and `ATSPI_REGISTRY` can point to nonstandard executable locations.
 
 Prism and accessibility dependencies use pinned source revisions and verified archive hashes. See `Dist/BuildPrism.sh` and `Dist/LinuxAccessibility/README.md`. Linux packages include the corresponding modified accessibility sources and licenses; the DLLs are replaceable. The Windows package omits the Linux bridge and retains the Windows Prism DLL.
 
