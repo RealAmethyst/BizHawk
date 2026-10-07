@@ -35,6 +35,9 @@ if [ "${1:-linux-x64}" = "windows-x64" ]; then
 	rm -f *.so UIAutomation*.dll UiaAtkBridge.dll* GLibSharp.dll GioSharp.dll AtkSharp.dll CairoSharp.dll PangoSharp.dll GdkSharp.dll
 else
 	cp -R ../output/LinuxAccessibility .
+	# Game-script releases supply their own content; keep this location empty.
+	rm -rf Lua
+	mkdir Lua
 	find . -type f -name "*.sh" -exec chmod +x {} \; # installed with -m644 but needs to be 755
 	cd "dll"
 	rm -f prism.dll
