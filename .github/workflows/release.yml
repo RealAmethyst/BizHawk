@@ -47,8 +47,7 @@ jobs:
         run: Dist/Package.sh
       - name: Package into .tar.gz
         run: |
-          mv packaged_output BizHawk-${{ env.BIZHAWK_VERSION }}-linux-x64
-          tar -czf BizHawk-${{ env.BIZHAWK_VERSION }}-linux-x64.tar.gz --owner=0 --group=0 BizHawk-${{ env.BIZHAWK_VERSION }}-linux-x64
+          tar -czf BizHawk-${{ env.BIZHAWK_VERSION }}-linux-x64.tar.gz --owner=0 --group=0 -C packaged_output .
 
       - name: Package (Windows)
         run: Dist/Package.sh windows-x64
