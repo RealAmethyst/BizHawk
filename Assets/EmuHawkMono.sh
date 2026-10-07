@@ -16,6 +16,8 @@ if [ -z "$libpath" ]; then
 	libpath="/usr/lib"
 fi
 export LD_LIBRARY_PATH="$PWD/dll:$PWD:$libpath"
+# Load the bundled WinForms-to-AT-SPI bridge without a system-wide Mono install.
+export MONO_UIA_BRIDGE="UiaAtkBridge, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f4ceacb585d99812"
 export MONO_CRASH_NOFILE=1
 export MONO_WINFORMS_XIM_STYLE=disabled # see https://bugzilla.xamarin.com/show_bug.cgi?id=28047#c9
 if (ps -C "mono" -o "cmd" --no-headers | grep -Fq "EmuHawk.exe"); then

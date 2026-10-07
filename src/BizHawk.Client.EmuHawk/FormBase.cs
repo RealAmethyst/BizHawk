@@ -123,7 +123,7 @@ namespace BizHawk.Client.EmuHawk
 
 		protected override void WndProc(ref Message m)
 		{
-			if (!BlocksInputWhenFocused)
+			if (!OSTailoredCode.IsUnixHost && !BlocksInputWhenFocused)
 			{
 				// this is necessary to trap plain alt keypresses so that only our hotkey system gets them
 				if (m.Msg == WM_SYSCOMMAND)
@@ -140,7 +140,7 @@ namespace BizHawk.Client.EmuHawk
 
 		protected override bool ProcessDialogChar(char charCode)
 		{
-			if (BlocksInputWhenFocused) return base.ProcessDialogChar(charCode);
+			if (OSTailoredCode.IsUnixHost || BlocksInputWhenFocused) return base.ProcessDialogChar(charCode);
 			// this is necessary to trap alt+char combinations so that only our hotkey system gets them
 			return (ModifierKeys & Keys.Alt) != 0 || base.ProcessDialogChar(charCode);
 		}

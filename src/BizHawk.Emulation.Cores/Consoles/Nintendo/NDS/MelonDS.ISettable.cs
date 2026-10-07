@@ -209,7 +209,7 @@ namespace BizHawk.Emulation.Cores.Consoles.Nintendo.NDS
 
 			[DisplayName("Enable JIT Recompiler")]
 			[Description("Enables JIT recompilation, offering a speed boost at the cost of accuracy. Debugging tools cannot be used with the JIT. Savestate size will be much larger with the JIT.")]
-			[DefaultValue(false)]
+			[DefaultValue(true)]
 			public bool EnableJIT { get; set; }
 
 			[JsonIgnore]

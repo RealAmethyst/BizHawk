@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 using BizHawk.Client.Common;
@@ -34,8 +36,8 @@ namespace BizHawk.Client.EmuHawk
 				skipNextFrame = false;
 				framesToSkip = 0;
 
-				//keep from burning CPU
-				Thread.Sleep(15);
+				//keep from burning CPU (but dispatch COM so screen-reader accessibility stays serviced)
+				ResponsiveSleep(15);
 				return;
 			}
 
@@ -277,6 +279,39 @@ namespace BizHawk.Client.EmuHawk
 			return rv;
 		}
 
+		[DllImport("ole32.dll")]
+		private static extern int CoWaitForMultipleHandles(uint dwFlags, uint dwTimeout, int cHandles, IntPtr[] pHandles, out uint lpdwindex);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		private static extern IntPtr CreateEventW(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, IntPtr lpName);
+
+		private const uint COWAIT_DISPATCH_CALLS = 0x8;
+		private static readonly IntPtr[] _responsiveSleepHandles = OSTailoredCode.IsUnixHost
+			? null
+			: new[] { CreateEventW(IntPtr.Zero, true, false, IntPtr.Zero) };
+
+		private static readonly Lazy<Action<int>> UnixResponsiveWait = new(() =>
+		{
+			// The bridge is optional; its wait pumps only AT-SPI on this UI thread.
+			var bridge = AppDomain.CurrentDomain.GetAssemblies()
+				.FirstOrDefault(a => a.GetName().Name == "UiaAtkBridge");
+			var method = bridge?.GetType("UiaAtkBridge.WinFormsMainLoop")?.GetMethod("ResponsiveWait");
+			return method is null ? Thread.Sleep : (Action<int>)Delegate.CreateDelegate(typeof(Action<int>), method);
+		});
+
+		/// <summary>Waits while servicing accessibility calls: COM on Windows, AT-SPI on Linux.
+		/// Does not pump input or reenter the emulator loop.</summary>
+		private static void ResponsiveSleep(int ms)
+		{
+			if (ms < 1) ms = 1;
+			if (OSTailoredCode.IsUnixHost)
+			{
+				UnixResponsiveWait.Value(ms);
+				return;
+			}
+			_ = CoWaitForMultipleHandles(COWAIT_DISPATCH_CALLS, (uint)ms, 1, _responsiveSleepHandles, out _);
+		}
+
 		private void SpeedThrottle(Sound sound, bool paused)
 		{
 			AutoFrameSkip_BeforeThrottle();
@@ -326,7 +361,7 @@ namespace BizHawk.Client.EmuHawk
 							break;
 					}
 
-					Thread.Sleep(Math.Max(sleepTime, 1));
+					ResponsiveSleep(Math.Max(sleepTime, 1));
 				}
 				else if (sleepTime > 0) // spin for <1 millisecond waits
 				{

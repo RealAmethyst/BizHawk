@@ -47,4 +47,16 @@ UpgradeLog.htm
 
 /packages
 
+/Dist/prism-build/
+/Assets/dll/libprism.so
+/Assets/Prism/
+
 launchSettings.json
+
+/Dist/accessibility-build/
+/Assets/LinuxAccessibility/
+/Assets/dll/UIAutomation*.dll
+/Assets/dll/UiaAtkBridge.dll*
+/Assets/dll/*Sharp.dll
+/Assets/dll/libbridge-glue.so
+/Dist/LinuxAccessibility/tests/__pycache__/

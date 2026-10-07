@@ -1,0 +1,3 @@
+*.sh text eol=lf
+# Patch context must retain upstream whitespace exactly.
+Dist/LinuxAccessibility/*.patch -whitespace

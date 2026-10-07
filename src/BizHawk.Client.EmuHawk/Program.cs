@@ -39,6 +39,15 @@ namespace BizHawk.Client.EmuHawk
 
 		static Program()
 		{
+			// Opt into WinForms UI Automation before any controls are created.
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures", false);
+				AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.2", false);
+				AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.3", false);
+				AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.4", false);
+			}
+
 			// Quickly check if the user is running this as a 32 bit process somehow
 			// TODO: We may want to remove this sometime, EmuHawk should be able to run somewhat as 32 bit if the user really wants to
 			// (There are no longer any hard 64 bit deps, i.e. SlimDX is no longer around)

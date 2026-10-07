@@ -81,6 +81,7 @@ namespace BizHawk.Client.EmuHawk
 			this.FunctionsListMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.OnlineDocsMenuItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.OutputBox = new System.Windows.Forms.RichTextBox();
+			this.OutputBox.AccessibleName = "Output";
 			this.ConsoleContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.CopyContextItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.SelectAllContextItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
@@ -90,6 +91,7 @@ namespace BizHawk.Client.EmuHawk
 			this.ClearRegisteredFunctionsLogContextItem = new BizHawk.WinForms.Controls.ToolStripMenuItemEx();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.InputBox = new System.Windows.Forms.TextBox();
+			this.InputBox.AccessibleName = "Lua command";
 			this.NumberOfScripts = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.OutputMessages = new BizHawk.WinForms.Controls.LocLabelEx();
 			this.toolStrip1 = new BizHawk.WinForms.Controls.ToolStripEx();
@@ -108,7 +110,7 @@ namespace BizHawk.Client.EmuHawk
 			this.InsertSeparatorToolbarItem = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator10 = new BizHawk.WinForms.Controls.ToolStripSeparatorEx();
 			this.EraseToolbarItem = new System.Windows.Forms.ToolStripButton();
-			this.LuaListView = new BizHawk.Client.EmuHawk.InputRoll();
+			this.LuaListView = new System.Windows.Forms.ListView();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.ScriptListContextMenu.SuspendLayout();
 			this.menuStrip1.SuspendLayout();
@@ -639,24 +641,20 @@ namespace BizHawk.Client.EmuHawk
 			// LuaListView
 			// 
 			this.LuaListView.AllowColumnReorder = false;
-			this.LuaListView.AllowColumnResize = true;
-			this.LuaListView.AlwaysScroll = false;
 			this.LuaListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.LuaListView.CellHeightPadding = 0;
-			this.LuaListView.CellWidthPadding = 0;
 			this.LuaListView.ContextMenuStrip = this.ScriptListContextMenu;
 			this.LuaListView.FullRowSelect = true;
-			this.LuaListView.HorizontalOrientation = false;
-			this.LuaListView.LetKeysModifySelection = false;
+			this.LuaListView.View = System.Windows.Forms.View.Details;
+			this.LuaListView.HideSelection = false;
+			this.LuaListView.ShowGroups = false;
+			this.LuaListView.AccessibleName = "Scripts";
 			this.LuaListView.Location = new System.Drawing.Point(4, 21);
 			this.LuaListView.Name = "LuaListView";
-			this.LuaListView.RowCount = 0;
-			this.LuaListView.ScrollSpeed = 1;
 			this.LuaListView.Size = new System.Drawing.Size(273, 271);
 			this.LuaListView.TabIndex = 0;
-			this.LuaListView.ColumnClick += new BizHawk.Client.EmuHawk.InputRoll.ColumnClickEventHandler(this.LuaListView_ColumnClick);
+			this.LuaListView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LuaListView_ColumnClick);
 			this.LuaListView.DoubleClick += new System.EventHandler(this.LuaListView_DoubleClick);
 			this.LuaListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.LuaListView_KeyDown);
 			// 
@@ -716,7 +714,7 @@ namespace BizHawk.Client.EmuHawk
 
 		#endregion
 
-		private InputRoll LuaListView;
+		private System.Windows.Forms.ListView LuaListView;
 		private MenuStripEx menuStrip1;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx FileSubMenu;
 		private BizHawk.WinForms.Controls.ToolStripMenuItemEx SaveSessionMenuItem;

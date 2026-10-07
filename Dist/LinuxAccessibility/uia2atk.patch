@@ -1,0 +1,1236 @@
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/Button/InvokeProviderBehavior.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/Button/InvokeProviderBehavior.cs
+index 82899a4..ecb0531 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/Button/InvokeProviderBehavior.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/Button/InvokeProviderBehavior.cs
+@@ -85,7 +85,7 @@ namespace Mono.UIAutomation.Winforms.Behaviors.Button
+ 			if (Provider.Control.Enabled == false)
+ 				throw new ElementNotEnabledException ();
+ 
+-			PerformClick ();
++			Provider.Control.BeginInvoke (new SWF.MethodInvoker (PerformClick));
+ 		}
+ 		
+ 		#endregion	
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripButton/InvokeProviderBehavior.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripButton/InvokeProviderBehavior.cs
+index 1e1307b..2716533 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripButton/InvokeProviderBehavior.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripButton/InvokeProviderBehavior.cs
+@@ -71,7 +71,7 @@ namespace Mono.UIAutomation.Winforms.Behaviors.ToolStripButton
+ 			if (!button.Enabled)
+ 				throw new ElementNotEnabledException ();
+ 
+-			PerformClick ();
++			button.Owner.BeginInvoke (new SWF.MethodInvoker (PerformClick));
+ 		}
+ 
+ 		private void PerformClick ()
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripItem/InvokeProviderBehavior.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripItem/InvokeProviderBehavior.cs
+index 3726871..dd5b7b6 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripItem/InvokeProviderBehavior.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripItem/InvokeProviderBehavior.cs
+@@ -82,7 +82,7 @@ namespace Mono.UIAutomation.Winforms.Behaviors.ToolStripItem
+ 			if (((SWF.ToolStripItem)Provider.Component).Enabled == false)
+ 				throw new ElementNotEnabledException ();
+ 
+-			PerformClick ();
++			((SWF.ToolStripItem) Provider.Component).Owner.BeginInvoke (new SWF.MethodInvoker (PerformClick));
+ 		}
+ 		
+ 		#endregion	
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripSplitButton/InvokeProviderBehavior.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripSplitButton/InvokeProviderBehavior.cs
+index a3d1a88..de3b37f 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripSplitButton/InvokeProviderBehavior.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Behaviors/ToolStripSplitButton/InvokeProviderBehavior.cs
+@@ -71,7 +71,7 @@ namespace Mono.UIAutomation.Winforms.Behaviors.ToolStripSplitButton
+ 			if (!button.Enabled)
+ 				throw new ElementNotEnabledException ();
+ 
+-			PerformButtonClick ();
++			button.Owner.BeginInvoke (new SWF.MethodInvoker (PerformButtonClick));
+ 		}
+ 
+ 		private void PerformButtonClick ()
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Events/ListView/ListItemEditValuePatternValueEvent.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Events/ListView/ListItemEditValuePatternValueEvent.cs
+index da235a4..702395f 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Events/ListView/ListItemEditValuePatternValueEvent.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Events/ListView/ListItemEditValuePatternValueEvent.cs
+@@ -33,8 +33,12 @@ namespace Mono.UIAutomation.Winforms.Events.ListView
+ 		#region Constructors
+ 
+ 		public ListItemEditValuePatternValueEvent (ListViewProvider.ListViewListItemEditProvider provider)
+-			: base (provider, 
+-			        ValuePatternIdentifiers.ValueProperty)
++			: this (provider, ValuePatternIdentifiers.ValueProperty)
++		{
++		}
++
++		public ListItemEditValuePatternValueEvent (ListViewProvider.ListViewListItemEditProvider provider, AutomationProperty property)
++			: base (provider, property)
+ 		{
+ 			editProvider = provider;
+ 		}
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Navigation/NavigationWinform.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Navigation/NavigationWinform.cs
+index 450ced6..f731839 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Navigation/NavigationWinform.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms.Navigation/NavigationWinform.cs
+@@ -168,6 +168,14 @@ namespace Mono.UIAutomation.Winforms.Navigation
+ 			AppendWinformChildToEnd (newChild);
+ 		}
+ 
++		public void DetachChildForReparenting (FragmentControlProvider child)
++		{
++			CheckThread ();
++			if (child == null || child.Navigation.Parent != Provider)
++				throw new ArgumentException ("The provider is not a child of this parent.");
++			RemoveWinformChild (child);
++		}
++
+ 		public void RemoveChild (FragmentControlProvider child)
+ 		{
+ 			if (child == null)
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ComboBoxProvider.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ComboBoxProvider.cs
+index c786cc9..b1096ad 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ComboBoxProvider.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ComboBoxProvider.cs
+@@ -370,10 +370,14 @@ namespace Mono.UIAutomation.Winforms
+ 			protected override void InitializeChildControlStructure ()
+ 			{
+ 				base.InitializeChildControlStructure ();
++				comboboxControl.Items.UIACollectionChanged += OnCollectionChanged;
++				foreach (object value in comboboxControl.Items)
++					AddChildProvider (GetItemProviderFrom (this, value));
+ 			}
+ 
+ 			protected override void FinalizeChildControlStructure()
+ 			{
++				comboboxControl.Items.UIACollectionChanged -= OnCollectionChanged;
+ 				base.FinalizeChildControlStructure ();
+ 			}
+ 
+@@ -516,18 +520,11 @@ namespace Mono.UIAutomation.Winforms
+ 
+ 			private void OnDropDown (object sender, EventArgs args)
+ 			{
+-				foreach (object objectItem in comboboxControl.Items) {
+-					ListItemProvider item = GetItemProviderFrom (this, objectItem);
+-					AddChildProvider (item);
+-				}
+ 				InitializeScrollBehaviorObserver ();
+ 			}
+ 
+ 			private void OnDropDownClosed (object sender, EventArgs args)
+ 			{
+-				foreach (var childListItemProvider in Navigation.GetAllChildren ().OfType<ListItemProvider> ()) {
+-					RemoveChildProvider (childListItemProvider); 
+-				}
+ 				InitializeScrollBehaviorObserver ();
+ 			}
+ 
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/FragmentControlProvider.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/FragmentControlProvider.cs
+index 63b778b..4d89bee 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/FragmentControlProvider.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/FragmentControlProvider.cs
+@@ -164,7 +164,7 @@ namespace Mono.UIAutomation.Winforms
+ 			NotifyOnChildProviderAdded (newChild, raiseEvent);
+ 			
+ 			if (recursive)
+-				newChild.InitializeChildControlStructure ();
++				newChild.EnsureChildControlStructure ();
+ 		}
+ 
+ 		public void RemoveChildProvider (FragmentControlProvider child)
+@@ -179,7 +179,7 @@ namespace Mono.UIAutomation.Winforms
+ 				return;
+ 			}
+ 			
+-			child.FinalizeChildControlStructure ();  // Always recursive
++			child.ReleaseChildControlStructure ();  // Always recursive
+ 
+ 			NotifyOnChildProviderRemoved (child, raiseEvent);
+ 
+@@ -194,7 +194,7 @@ namespace Mono.UIAutomation.Winforms
+ 		public override void Terminate ()
+ 		{
+ 			InvalidateReallyVisible ();
+-			FinalizeChildControlStructure ();
++			ReleaseChildControlStructure ();
+ 			// No navigation.Clear (): `DataGridProver`, `DataGridViewProvder` uses`Terminate()` on Refresh and some othe cases.
+ 			base.Terminate ();
+ 		}
+@@ -208,6 +208,22 @@ namespace Mono.UIAutomation.Winforms
+ 			navigation.SetWfcUserCustomProviderWrapper (wrapper);
+ 		}
+ 
++		private bool childStructureInitialized;
++
++		private void EnsureChildControlStructure ()
++		{
++			if (childStructureInitialized) return;
++			childStructureInitialized = true;
++			InitializeChildControlStructure ();
++		}
++
++		private void ReleaseChildControlStructure ()
++		{
++			if (!childStructureInitialized) return;
++			childStructureInitialized = false;
++			FinalizeChildControlStructure ();
++		}
++
+ 		//TODO: Are the generated events duplicated? Because we're already
+ 		//supporting StructureChangeType when Children are added to Controls.
+ 		//See: SimpleControlProvider.InitializeEvents
+@@ -229,8 +245,17 @@ namespace Mono.UIAutomation.Winforms
+ 				Control.ControlRemoved -= OnChildControlRemoved;
+ 			}
+ 
+-			foreach (var ch in navigation.GetAllChildren ())
+-				HandleChildComponentRemoved (ch.Component);
++			foreach (var child in navigation.GetAllChildren ()) {
++				if (child.Component is SWF.Control control)
++					control.VisibleChanged -= OnControlVisibleChanged;
++				RemoveChildProvider (child);
++				// Synthetic cells may have no Component, or share their parent's control.
++				// Only release a factory entry when it belongs to this exact provider.
++				if (ProviderFactory.FindProvider (child.Component) == child)
++					ProviderFactory.ReleaseProvider (child.Component);
++				else
++					child.Terminate ();
++			}
+ 
+ 			if (navigation.UserCustomProvider != null)
+ 				navigation.UserCustomProvider.Terminate ();
+@@ -299,9 +324,18 @@ namespace Mono.UIAutomation.Winforms
+ 		protected static void BecomeParent (FragmentControlProvider newParent, FormProvider child)
+ 		{
+ 			var oldParent = (FragmentControlProvider) child.Navigate (NavigateDirection.Parent);
+-			if (oldParent != null)
+-				oldParent.HandleChildComponentRemoved (child.Component);
+-			newParent.HandleChildComponentAdded (child.Component);
++			if (oldParent == newParent) return;
++			if (oldParent != null) {
++				// Reparenting a live window must not release its provider identity.
++				if (child.Control != null)
++					child.Control.VisibleChanged -= OnControlVisibleChanged;
++				oldParent.NotifyOnChildProviderRemoved (child, true);
++				oldParent.navigation.DetachChildForReparenting (child);
++			}
++			if (child.Control != null)
++				child.Control.VisibleChanged += OnControlVisibleChanged;
++			newParent.InsertChildProviderBefore (child, null, true, false);
++			child.EnsureChildControlStructure ();
+ 
+ 			child.Form.FormClosed -= form_FormClosed;
+ 			child.Form.FormClosed += form_FormClosed;
+@@ -375,7 +409,8 @@ namespace Mono.UIAutomation.Winforms
+ 
+ 			var childProvider = (FragmentControlProvider) ProviderFactory.FindProvider (childComponent);
+ 			if (childProvider == null) {
+-				Log.Error($"[FragmentControlProvider.HandleChildComponentRemoved] no Provider for <{childComponent}>");
++				// Mono removes owned forms during Owner changes before they have been shown.
++				// Such a form has not entered the provider tree yet.
+ 				return;
+ 			}
+ 
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListProvider.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListProvider.cs
+index d1a2be3..62faf89 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListProvider.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListProvider.cs
+@@ -218,10 +218,17 @@ namespace Mono.UIAutomation.Winforms
+ 	
+ 		protected override void FinalizeChildControlStructure ()
+ 		{
++			if (observer != null) {
++				observer.ScrollPatternSupportChanged -= OnScrollPatternSupportChanged;
++				observer.Terminate ();
++				observer = null;
++			}
+ 			foreach (ListItemProvider item in Items)
+-				RemoveChildProvider (item);
++				if (item.Navigation.Parent == this)
++					RemoveChildProvider (item);
+ 
+ 			ClearItemsList ();
++			base.FinalizeChildControlStructure ();
+ 		}
+ 	
+ 		#endregion
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListViewProvider.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListViewProvider.cs
+index ba559c1..9a0899b 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListViewProvider.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ListViewProvider.cs
+@@ -540,7 +540,8 @@ namespace Mono.UIAutomation.Winforms
+ 		{
+ 			if (child == null)
+ 				return;
+-			RemoveChildProvider (child);
++			if (child.Navigation.Parent == this)
++				RemoveChildProvider (child);
+ 			child.Terminate ();
+ 		}
+ 
+@@ -842,10 +843,7 @@ namespace Mono.UIAutomation.Winforms
+ 				//Event used to update columns in ListItem when View.Details
+ 				listView.Columns.UIACollectionChanged -= OnUIAColumnsCollectionChanged;
+ 
+-				foreach (ListViewHeaderItemProvider item in headerItems .Values) {
+-					RemoveChildProvider (item);
+-					item.Terminate ();
+-				}
++				headerItems.Clear ();
+ 			}
+ 
+ 			private void OnUIAColumnsCollectionChanged (object sender, 
+@@ -1223,6 +1221,10 @@ namespace Mono.UIAutomation.Winforms
+ 				SetBehavior (ValuePatternIdentifiers.Pattern,
+ 				             new ListItemEditValueProviderBehavior (this));
+ 
++				// The cell's name is its value; notify both properties when it changes.
++				SetEvent (ProviderEventType.AutomationElementNameProperty,
++				          new ListItemEditValuePatternValueEvent (this, AutomationElementIdentifiers.NameProperty));
++
+ 				// Automation Events
+ 				SetEvent (ProviderEventType.AutomationElementIsOffscreenProperty,
+ 				          new ListItemEditAutomationIsOffscreenPropertyEvent (this));
+diff --git a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ToolBarProvider.cs b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ToolBarProvider.cs
+index 43075fd..ebd3da8 100644
+--- a/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ToolBarProvider.cs
++++ b/UIAutomationWinforms/UIAutomationWinforms/Mono.UIAutomation.Winforms/ToolBarProvider.cs
+@@ -168,6 +168,10 @@ namespace Mono.UIAutomation.Winforms
+ 		
+ 			#endregion
+ 
++			public override Control AssociatedControl {
++				get { return toolBarButton.Parent; }
++			}
++
+ 			public override IRawElementProviderFragmentRoot FragmentRoot {
+ 				get {
+ 					return (IRawElementProviderFragmentRoot) ProviderFactory.FindProvider (toolBarButton.Parent);
+diff --git a/UiaAtkBridge/UiaAtkBridge/AutomationBridge.cs b/UiaAtkBridge/UiaAtkBridge/AutomationBridge.cs
+index bb5e285..e4efe6f 100644
+--- a/UiaAtkBridge/UiaAtkBridge/AutomationBridge.cs
++++ b/UiaAtkBridge/UiaAtkBridge/AutomationBridge.cs
+@@ -112,29 +112,24 @@ namespace UiaAtkBridge
+ 
+ 		public static Adapter GetAdapterForProviderSemiLazy (IRawElementProviderSimple provider)
+ 		{
+-			IRawElementProviderFragment navigator = (IRawElementProviderFragment)provider;
+-			Queue <IRawElementProviderFragment> parents = new Queue<IRawElementProviderFragment> ();
+-			Adapter adapter = GetAdapterForProviderLazy (navigator);
+-
+-			while ((adapter == null) && (navigator != null)) {
+-				navigator = navigator.Navigate (NavigateDirection.Parent);
+-				parents.Enqueue (navigator);
++			var navigator = provider as IRawElementProviderFragment;
++			var descendants = new Stack<IRawElementProviderFragment> ();
++			Adapter adapter = null;
++			while (navigator != null) {
+ 				adapter = GetAdapterForProviderLazy (navigator);
++				if (adapter != null)
++					break;
++				descendants.Push (navigator);
++				navigator = navigator.Navigate (NavigateDirection.Parent);
+ 			}
+-
+-			if (parents.Count == 0)
+-				return adapter;
+-			ParentAdapter parentAdapter = adapter as ParentAdapter;
+-			if (parentAdapter == null)
+-				return null;
+-
+-			parents.Dequeue ();
+-			parentAdapter.RequestChildren ();
+-			while (parents.Count > 0) {
+-				parentAdapter = (ParentAdapter)GetAdapterForProviderLazy (parents.Dequeue ());
+-				parentAdapter.RequestChildren ();
++			while (descendants.Count > 0) {
++				var parent = adapter as ParentAdapter;
++				if (parent == null)
++					return null;
++				parent.RequestChildren ();
++				adapter = GetAdapterForProviderLazy (descendants.Pop ());
+ 			}
+-			return GetAdapterForProviderLazy (provider);
++			return adapter;
+ 		}
+ 		
+ 		[Obsolete("Use GetAdapterForProviderLazy as it's more efficient")]
+diff --git a/UiaAtkBridge/UiaAtkBridge/ComboBox.cs b/UiaAtkBridge/UiaAtkBridge/ComboBox.cs
+index 5a79ec0..2269ae6 100644
+--- a/UiaAtkBridge/UiaAtkBridge/ComboBox.cs
++++ b/UiaAtkBridge/UiaAtkBridge/ComboBox.cs
+@@ -54,9 +54,6 @@ namespace UiaAtkBridge
+ 				new SelectionProviderUserHelper ((IRawElementProviderFragment)Provider, 
+ 				                                 selProvider, true);
+ 			
+-			var providersSelected = selProvider.GetSelection ();
+-			if (providersSelected != null && providersSelected.Length == 1)
+-				Name = (string)providersSelected [0].GetPropertyValue (AEIds.NameProperty.Id);
+ 		}
+ 
+ 		internal static bool IsSimple (IRawElementProviderSimple provider)
+@@ -80,11 +77,6 @@ namespace UiaAtkBridge
+ 			return states;
+ 		}
+ 
+-		protected override void UpdateNameProperty (string newName, bool fromCtor)
+-		{
+-			// We'll manage the name manually
+-		}
+-
+ #region Atk.ISelectionImplementor
+ 
+ 		public int SelectionCount
+@@ -160,13 +152,6 @@ namespace UiaAtkBridge
+ 
+ 		internal void RaiseSelectionChanged (string name)
+ 		{
+-			if (name == Name)
+-				return;
+-			
+-			if (name == null)
+-				name = String.Empty;
+-			
+-			Name = name;
+ 			EmitSelectionChanged ();
+ 		}
+ 		
+diff --git a/UiaAtkBridge/UiaAtkBridge/ComboBoxOptionsTable.cs b/UiaAtkBridge/UiaAtkBridge/ComboBoxOptionsTable.cs
+index c9e3e41..f6936ed 100644
+--- a/UiaAtkBridge/UiaAtkBridge/ComboBoxOptionsTable.cs
++++ b/UiaAtkBridge/UiaAtkBridge/ComboBoxOptionsTable.cs
+@@ -154,16 +154,16 @@ namespace UiaAtkBridge
+ 		}
+ 
+ 		//FIXME: remove this once we expose the correct overload (BNC#512477)
+-		public int GetSelectedColumns (out int selected)
++		public int GetSelectedColumns (out IntPtr selected)
+ 		{
+-			selected = 0;
++			selected = IntPtr.Zero;
+ 			return 0;
+ 		}
+ 
+ 		//FIXME: remove this once we expose the correct overload (BNC#512477)
+-		public int GetSelectedRows (out int selected)
++		public int GetSelectedRows (out IntPtr selected)
+ 		{
+-			selected = 0;
++			selected = IntPtr.Zero;
+ 			return 0;
+ 		}
+ 
+diff --git a/UiaAtkBridge/UiaAtkBridge/List.cs b/UiaAtkBridge/UiaAtkBridge/List.cs
+index 7a6acc5..8ecb001 100644
+--- a/UiaAtkBridge/UiaAtkBridge/List.cs
++++ b/UiaAtkBridge/UiaAtkBridge/List.cs
+@@ -564,7 +564,7 @@ AtkObject,
+ 		}
+ 
+ 		// TODO: Remove next methods when atk-sharp is fixed (BNC#512477)
+-		public int GetSelectedColumns (out int selected)
++		public int GetSelectedColumns (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedColumns (out selected);
+ 		}
+@@ -574,7 +574,7 @@ AtkObject,
+ 			return tableExpert.GetSelectedColumns (out selected);
+ 		}
+ 
+-		public int GetSelectedRows (out int selected)
++		public int GetSelectedRows (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedRows (out selected);
+ 		}
+diff --git a/UiaAtkBridge/UiaAtkBridge/ListGroup.cs b/UiaAtkBridge/UiaAtkBridge/ListGroup.cs
+index 4901db6..33ae602 100644
+--- a/UiaAtkBridge/UiaAtkBridge/ListGroup.cs
++++ b/UiaAtkBridge/UiaAtkBridge/ListGroup.cs
+@@ -181,12 +181,12 @@ namespace UiaAtkBridge
+ 		}
+ 
+ 		// TODO: Remove next methods when atk-sharp is fixed (BNC#512477)
+-		public int GetSelectedColumns (out int selected)
++		public int GetSelectedColumns (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedColumns (out selected);
+ 		}
+ 
+-		public int GetSelectedRows (out int selected)
++		public int GetSelectedRows (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedRows (out selected);
+ 		}
+diff --git a/UiaAtkBridge/UiaAtkBridge/Monitor.cs b/UiaAtkBridge/UiaAtkBridge/Monitor.cs
+index b41b02a..e69c690 100644
+--- a/UiaAtkBridge/UiaAtkBridge/Monitor.cs
++++ b/UiaAtkBridge/UiaAtkBridge/Monitor.cs
+@@ -36,8 +36,8 @@ namespace UiaAtkBridge
+ {
+ 	internal class Monitor
+ 	{
+-		private bool useNativeInitialization = true;
+-		private GLib.MainLoop mainLoop;
++		private WinFormsMainLoop mainLoop;
++		private bool bridgeStarted;
+ 		
+ 		private void RegisterSignal (System.Type type, string name)
+ 		{
+@@ -80,10 +80,7 @@ namespace UiaAtkBridge
+ 			Atk.Util.GetToolkitNameHandler = GetAssemblyName;
+ 			Atk.Util.GetToolkitVersionHandler = GetAssemblyVersionNumber;
+ 			
+-			if (!useNativeInitialization)
+-				Atk.Util.AddGlobalEventListenerHandler = AddGlobalEventListener;
+-			else
+-				override_global_event_listener ();
++			override_global_event_listener ();
+ 			Atk.Util.AddKeyEventListenerHandler = AddKeyEventListener;
+ 		}
+ 
+@@ -124,59 +121,27 @@ namespace UiaAtkBridge
+ 		
+ 		public void ApplicationStarts ()
+ 		{
+-			if (mainLoop != null && mainLoop.IsRunning) {
+-				Log.Warn ("AutomationBridge: Received init event, but already running;  ignoring.");
+-				return;
+-			}
+-
++			if (bridgeStarted) return;
+ 			CheckMainLoop ();
+-			AutoResetEvent sync = GLibHacks.Invoke (delegate (object sender, EventArgs args) {
+-				Environment.SetEnvironmentVariable (ATK_BRIDGE_ENVVAR_NAME, null);
+-				LaunchAtkBridge ();
+-				Environment.SetEnvironmentVariable (GAIL_ENVVAR_NAME, null);
+-			});
+-			sync.WaitOne ();
+-			sync.Close ();
+-			sync = null;
+-
++			Environment.SetEnvironmentVariable (ATK_BRIDGE_ENVVAR_NAME, null);
++			LaunchAtkBridge ();
++			bridgeStarted = true;
++			Environment.SetEnvironmentVariable (GAIL_ENVVAR_NAME, null);
+ 			Environment.SetEnvironmentVariable (GTK_MODULES_ENVVAR_NAME, gtk_modules_envvar_content);
+ 		}
+-		
++
+ 		public void CheckMainLoop ()
+ 		{
+-			if (mainLoop != null && mainLoop.IsRunning)
+-				return;
+-
+-			Thread glibThread = new Thread (new ThreadStart (GLibMainLoopThread));
+-			glibThread.IsBackground = true;
+-			glibThread.Start ();
++			if (mainLoop == null) mainLoop = new WinFormsMainLoop ();
+ 		}
+ 
+-		private void GLibMainLoopThread ()
+-		{
+-			mainLoop = new GLib.MainLoop ();
+-			mainLoop.Run ();
+-		}
+-		
+ 		internal void Dispose ()
+ 		{
+-			//FIXME: find a better way to see if we have been already disposed
+-			if (!mainLoop.IsRunning) {
+-#if DEBUG
+-				//we prefer to crash, in order to fix ASAP the buggy clown that did this
+-				throw new ObjectDisposedException ("You shouldn't call dispose more than once");
+-#else
+-				return;// probably already disposed
+-#endif
+-			}
+-			AutoResetEvent sync = GLibHacks.Invoke (delegate (object sender, EventArgs args) {
+-				ShutdownAtkBridge ();
+-				Atk.Util.GetRootHandler = null;
+-				mainLoop.Quit ();
+-			});
+-			sync.WaitOne ();
+-			sync.Close ();
+-			sync = null;
++			if (mainLoop == null) return;
++			ShutdownAtkBridge ();
++			mainLoop.Dispose ();
++			mainLoop = null;
++			bridgeStarted = false;
+ 		}
+ 
+ 		internal static string GetProgramName ()
+@@ -366,7 +331,10 @@ namespace UiaAtkBridge
+ 		{
+ 			InvokeCB icb = new InvokeCB (d);
+ 			
+-			GLib.Timeout.Add (0, new GLib.TimeoutHandler (icb.Invoke));
++			if (Thread.CurrentThread.ManagedThreadId == WinFormsMainLoop.UiThreadId)
++				icb.Invoke ();
++			else
++				GLib.Timeout.Add (0, new GLib.TimeoutHandler (icb.Invoke));
+ 			
+ 			return icb.sync;
+ 		}
+@@ -375,7 +343,10 @@ namespace UiaAtkBridge
+ 		{
+ 			InvokeCB icb = new InvokeCB (d, sender, args);
+ 			
+-			GLib.Timeout.Add (0, new GLib.TimeoutHandler (icb.Invoke));
++			if (Thread.CurrentThread.ManagedThreadId == WinFormsMainLoop.UiThreadId)
++				icb.Invoke ();
++			else
++				GLib.Timeout.Add (0, new GLib.TimeoutHandler (icb.Invoke));
+ 			
+ 			return icb.sync;
+ 		}
+diff --git a/UiaAtkBridge/UiaAtkBridge/Slider.cs b/UiaAtkBridge/UiaAtkBridge/Slider.cs
+index 5833208..80a7555 100644
+--- a/UiaAtkBridge/UiaAtkBridge/Slider.cs
++++ b/UiaAtkBridge/UiaAtkBridge/Slider.cs
+@@ -45,10 +45,6 @@ namespace UiaAtkBridge
+ 			oldText = textExpert.Text;
+ 		}
+ 
+-		protected override void UpdateNameProperty (string newName, bool fromCtor)
+-		{
+-			// ControlType.Slider returns Name from one static label, Atk returns NULL
+-		}
+ 
+ 		public void GetMinimumValue (ref GLib.Value value)
+ 		{
+diff --git a/UiaAtkBridge/UiaAtkBridge/Table.cs b/UiaAtkBridge/UiaAtkBridge/Table.cs
+index e0a7c44..181bde8 100644
+--- a/UiaAtkBridge/UiaAtkBridge/Table.cs
++++ b/UiaAtkBridge/UiaAtkBridge/Table.cs
+@@ -165,7 +165,7 @@ namespace UiaAtkBridge
+ 		}
+ 
+ 		// TODO: Remove next methods when atk-sharp is fixed (BNC#512477)
+-		public int GetSelectedColumns (out int selected)
++		public int GetSelectedColumns (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedColumns (out selected);
+ 		}
+@@ -175,7 +175,7 @@ namespace UiaAtkBridge
+ 			return tableExpert.GetSelectedColumns (out selected);
+ 		}
+ 
+-		public int GetSelectedRows (out int selected)
++		public int GetSelectedRows (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedRows (out selected);
+ 		}
+diff --git a/UiaAtkBridge/UiaAtkBridge/TableImplementorHelper.cs b/UiaAtkBridge/UiaAtkBridge/TableImplementorHelper.cs
+index c12b5bf..40e2df2 100644
+--- a/UiaAtkBridge/UiaAtkBridge/TableImplementorHelper.cs
++++ b/UiaAtkBridge/UiaAtkBridge/TableImplementorHelper.cs
+@@ -61,26 +61,6 @@ namespace UiaAtkBridge
+ 			if (!AreRowColInBounds (row, column))
+ 				return null;
+ 
+-			IRawElementProviderSimple[] headers = null;
+-			if (tableProvider != null) {
+-				headers = tableProvider.GetColumnHeaders ();
+-			}
+-
+-			// Some controls will have column headers that need to
+-			// be mapped to row 0
+-			if (row == 0 && headers != null) {
+-				if (column >= headers.Length)
+-					return null;
+-
+-				return AutomationBridge.GetAdapterForProviderSemiLazy (
+-					headers [column]);
+-			}
+-
+-			// GetItem indexes through only items, not headers, so
+-			// we need to remap the row number
+-			if (headers != null)
+-				row -= 1;
+-
+ 			IRawElementProviderSimple item;
+ 			try {
+ 				item = GridProvider.GetItem (row, column);
+@@ -97,92 +77,39 @@ namespace UiaAtkBridge
+ 
+ 		public int GetIndexAt (int row, int column)
+ 		{
+-			Adapter child = RefAt (row, column) as Adapter;
+-			if (child == null)
+-				return -1;
++			var child = RefAt (row, column);
++			return child == null ? -1 : child.IndexInParent;
++		}
+ 
+-			return child.IndexInParent + 1;
++		private IGridItemProvider GridItemAtIndex (int index)
++		{
++			if (index < 0 || index >= resource.NAccessibleChildren) return null;
++			var child = resource.RefAccessibleChild (index) as Adapter;
++			return child == null || child.Provider == null ? null
++				: child.Provider.GetPatternProvider (GridItemPatternIdentifiers.Pattern.Id) as IGridItemProvider;
+ 		}
+ 
+ 		public int GetColumnAtIndex (int index)
+ 		{
+-			if (index <= 0)
+-				return 0;
+-
+-			// Map from Atk's 1-based system to UIA's 0-based
+-			// indicies
+-			index--;
+-
+-			Adapter child = RefProviderChildByDepthSearch (index);
+-			if (child != null && child.Provider != null) {
+-				IGridItemProvider g = (IGridItemProvider) child.Provider.GetPatternProvider (GridItemPatternIdentifiers.Pattern.Id);
+-				if (g == null)	// ie, if a group header
+-					return 0;
+-				return g.Column;
+-			}
+-			return -1;
++			var gridItem = GridItemAtIndex (index);
++			return gridItem == null ? -1 : gridItem.Column;
+ 		}
+ 
+ 		public int GetRowAtIndex (int index)
+ 		{
+-			if (index <= 0)
+-				return -1;
+-
+-			// Map from Atk's 1-based system to UIA's 0-based
+-			// indicies
+-			index--;
+-
+-			int ret = 0;
+-			if (tableProvider != null) {
+-				IRawElementProviderSimple[] headers
+-					= tableProvider.GetColumnHeaders ();
+-				if (headers != null && headers.Length > 0) {
+-					if (index >= headers.Length)
+-						ret = 1;
+-				}
+-			}
+-
+-			Adapter child = RefProviderChildByDepthSearch (index);
+-			if (child != null && child.Provider != null) {
+-				IGridItemProvider g = (IGridItemProvider) child.Provider.GetPatternProvider (GridItemPatternIdentifiers.Pattern.Id);
+-				if (g != null)
+-					ret += g.Row;
+-				return ret;
+-			}
+-			return -1;
++			var gridItem = GridItemAtIndex (index);
++			return gridItem == null ? -1 : gridItem.Row;
+ 		}
+ 
+-		//this kind of search will work regardless of the technique used for the hierarchy layout used for
+-		//the children (mono-level or multi-level), because in the provider side it's multi-level always
+-		private Adapter RefProviderChildByDepthSearch (int pos)
++		private ISelectionItemProvider SelectionItemForCell (IRawElementProviderSimple item)
+ 		{
+-			Adapter adapter = null;
+-			var frag = resource.Provider as IRawElementProviderFragment;
+-			var parent = frag;
+-
+-			while (pos >= 0) {
+-				if (frag == null)
+-					return null;
+-				frag = frag.Navigate (NavigateDirection.FirstChild);
+-				if (frag == null)
+-					frag = parent.Navigate (NavigateDirection.NextSibling);
+-
+-				if (frag != null)
+-					parent = frag;
+-				else {
+-					if (parent != resource.Provider) {
+-						parent = parent.Navigate (NavigateDirection.Parent);
+-						frag = parent.Navigate (NavigateDirection.NextSibling);
+-					} else
+-						return null;
+-				}
+-
+-				adapter = AutomationBridge.GetAdapterForProviderSemiLazy (frag);
+-				//we need this check because there are some children providers that don't have an Adapter
+-				if (adapter != null)
+-					pos--;
++			while (item != null && item != resource.Provider) {
++				var selection = item.GetPatternProvider (SelectionItemPatternIdentifiers.Pattern.Id) as ISelectionItemProvider;
++				if (selection != null) return selection;
++				var fragment = item as IRawElementProviderFragment;
++				item = fragment == null ? null : fragment.Navigate (NavigateDirection.Parent);
+ 			}
+-			return adapter;
++			return null;
+ 		}
+ 
+ 		public int NColumns {
+@@ -208,20 +135,6 @@ namespace UiaAtkBridge
+ 
+ 			IGridItemProvider g = null;
+ 
+-			if (tableProvider != null) {
+-				IRawElementProviderSimple[] headers
+-					= tableProvider.GetColumnHeaders ();
+-				if (headers != null && headers.Length > 0) {
+-					if (row == 0) {
+-						g = headers [column].GetPatternProvider (
+-							GridItemPatternIdentifiers.Pattern.Id)
+-								as IGridItemProvider;
+-						return (g == null) ? 0 : g.ColumnSpan;
+-					}
+-					row -= 1;
+-				}
+-			}
+-
+ 			IRawElementProviderSimple item;
+ 			try {
+ 				item = GridProvider.GetItem (row, column);
+@@ -243,20 +156,6 @@ namespace UiaAtkBridge
+ 
+ 			IGridItemProvider g = null;
+ 
+-			if (tableProvider != null) {
+-				IRawElementProviderSimple[] headers
+-					= tableProvider.GetColumnHeaders ();
+-				if (headers != null && headers.Length > 0) {
+-					if (row == 0) {
+-						g = headers [column].GetPatternProvider (
+-							GridItemPatternIdentifiers.Pattern.Id)
+-								as IGridItemProvider;
+-						return (g == null) ? 0 : g.RowSpan;
+-					}
+-					row -= 1;
+-				}
+-			}
+-
+ 			IRawElementProviderSimple item;
+ 			try {
+ 				item = GridProvider.GetItem (row, column);
+@@ -282,7 +181,7 @@ namespace UiaAtkBridge
+ 				return null;
+ 
+ 			IRawElementProviderSimple [] items = tableProvider.GetColumnHeaders ();
+-			if (column < 0 || column >= items.Length)
++			if (items == null || column < 0 || column >= items.Length)
+ 				return null;
+ 
+ 			return (string) items [column].GetPropertyValue (AutomationElementIdentifiers.NameProperty.Id);
+@@ -294,9 +193,9 @@ namespace UiaAtkBridge
+ 				return null;
+ 
+ 			IRawElementProviderSimple [] items = tableProvider.GetColumnHeaders ();
+-			if (column < 0 || column >= items.Length)
++			if (items == null || column < 0 || column >= items.Length)
+ 				return null;
+-			return AutomationBridge.GetAdapterForProviderLazy (items [column]);
++			return AutomationBridge.GetAdapterForProviderSemiLazy (items [column]);
+ 		}
+ 
+ 		public string GetRowDescription (int row)
+@@ -305,7 +204,7 @@ namespace UiaAtkBridge
+ 				return null;
+ 
+ 			IRawElementProviderSimple [] items = tableProvider.GetRowHeaders ();
+-			if (row < 0 || row >= items.Length)
++			if (items == null || row < 0 || row >= items.Length)
+ 				return null;
+ 
+ 			return (string) items [row].GetPropertyValue (AutomationElementIdentifiers.NameProperty.Id);
+@@ -317,9 +216,9 @@ namespace UiaAtkBridge
+ 				return null;
+ 
+ 			IRawElementProviderSimple [] items = tableProvider.GetRowHeaders ();
+-			if (row < 0 || row >= items.Length)
++			if (items == null || row < 0 || row >= items.Length)
+ 				return null;
+-			return AutomationBridge.GetAdapterForProviderLazy (items [row]);
++			return AutomationBridge.GetAdapterForProviderSemiLazy (items [row]);
+ 		}
+ 
+ 		public Atk.Object Summary {
+@@ -367,7 +266,7 @@ namespace UiaAtkBridge
+ 			List<int> selectedItems = new List <int> ();
+ 			foreach (IRawElementProviderSimple item in items) {
+ 				ISelectionItemProvider selectionItem 
+-					= (ISelectionItemProvider) item.GetPatternProvider (SelectionItemPatternIdentifiers.Pattern.Id);
++					= SelectionItemForCell (item);
+ 				IGridItemProvider gridItem 
+ 					= (IGridItemProvider) item.GetPatternProvider (GridItemPatternIdentifiers.Pattern.Id);
+ 				if (selectionItem != null && gridItem != null) {
+@@ -396,21 +295,28 @@ namespace UiaAtkBridge
+ 			}
+ 		}
+ 
+-		// The below function should go away as soon as the atk-sharp api is fixed (BNC#512477)
+-		public int GetSelectedColumns (out int selected)
++		public int GetSelectedColumns (out IntPtr selected)
+ 		{
+-			Log.Warn ("TableImplementorHelper: GetSelectedColumns not implemented.");
+-			selected = 0;
+-			return 0;
++			int[] columns;
++			GetSelectedColumns (out columns);
++			selected = CopySelection (columns);
++			return columns.Length;
+ 		}
+ 
+-		// The below function should go away as soon as the atk-sharp api is fixed (BNC#512477)
+-		public int GetSelectedRows (out int selected)
++		public int GetSelectedRows (out IntPtr selected)
+ 		{
+-			// TODO: Logic should be the same as GetSelectedRows (out int [] selected)
+-			Log.Warn ("TableImplementorHelper: GetSelectedRows not implemented.");
+-			selected = 0;
+-			return 0;
++			int[] rows;
++			GetSelectedRows (out rows);
++			selected = CopySelection (rows);
++			return rows.Length;
++		}
++
++		private static IntPtr CopySelection (int[] indices)
++		{
++			if (indices.Length == 0) return IntPtr.Zero;
++			var memory = GLib.Marshaller.Malloc ((ulong) indices.Length * sizeof (int));
++			System.Runtime.InteropServices.Marshal.Copy (indices, 0, memory, indices.Length);
++			return memory;
+ 		}
+ 
+ 		public bool IsColumnSelected (int column)
+@@ -425,17 +331,6 @@ namespace UiaAtkBridge
+ 			if (row < 0 || row >= NRows)
+ 				return false;
+ 
+-			if (tableProvider != null) {
+-				IRawElementProviderSimple[] headers
+-					= tableProvider.GetColumnHeaders ();
+-				if (headers != null && headers.Length > 0) {
+-					// In UIA, header rows cannot be selected
+-					if (row == 0)
+-						return false;
+-					row -= 1;
+-				}
+-			}
+-
+ 			IRawElementProviderSimple item;
+ 			try {
+ 				item = GridProvider.GetItem (row, 0);
+@@ -445,7 +340,7 @@ namespace UiaAtkBridge
+ 			}
+ 
+ 			ISelectionItemProvider selectionItem 
+-				= (ISelectionItemProvider) item.GetPatternProvider (SelectionItemPatternIdentifiers.Pattern.Id);
++				= SelectionItemForCell (item);
+ 			if (selectionItem == null)
+ 				return false;
+ 
+@@ -460,17 +355,6 @@ namespace UiaAtkBridge
+ 			if (GridProvider == null)
+ 				return false;
+ 
+-			if (tableProvider != null) {
+-				IRawElementProviderSimple[] headers
+-					= tableProvider.GetColumnHeaders ();
+-				if (headers != null && headers.Length > 0) {
+-					// In UIA, header rows cannot be selected
+-					if (row == 0)
+-						return false;
+-					row -= 1;
+-				}
+-			}
+-
+ 			IRawElementProviderSimple item;
+ 			try {
+ 				item = GridProvider.GetItem (row, column);
+@@ -483,7 +367,7 @@ namespace UiaAtkBridge
+ 				return false;
+ 
+ 			ISelectionItemProvider selectionItemProvider 
+-				= (ISelectionItemProvider) item.GetPatternProvider (SelectionItemPatternIdentifiers.Pattern.Id);
++				= SelectionItemForCell (item);
+ 			if (selectionItemProvider == null)
+ 				return false;
+ 			
+@@ -498,17 +382,6 @@ namespace UiaAtkBridge
+ 			if (GridProvider == null)
+ 				return false;
+ 
+-			if (tableProvider != null) {
+-				IRawElementProviderSimple[] headers
+-					= tableProvider.GetColumnHeaders ();
+-				if (headers != null && headers.Length > 0) {
+-					// In UIA, header rows cannot be selected
+-					if (row == 0)
+-						return false;
+-					row -= 1;
+-				}
+-			}
+-			
+ 			IRawElementProviderSimple item;
+ 			try {
+ 				// UIA doesn't support row selection, so we select the first cell
+@@ -522,7 +395,7 @@ namespace UiaAtkBridge
+ 				return false;
+ 
+ 			ISelectionItemProvider selectionItem
+-				= (ISelectionItemProvider) item.GetPatternProvider (SelectionItemPatternIdentifiers.Pattern.Id);
++				= SelectionItemForCell (item);
+ 			if (selectionItem == null)
+ 				return false;
+ 			
+@@ -544,17 +417,6 @@ namespace UiaAtkBridge
+ 			if (GridProvider == null)
+ 				return false;
+ 
+-			if (tableProvider != null) {
+-				IRawElementProviderSimple[] headers
+-					= tableProvider.GetColumnHeaders ();
+-				if (headers != null && headers.Length > 0) {
+-					// In UIA, header rows cannot be selected
+-					if (row == 0)
+-						return false;
+-					row -= 1;
+-				}
+-			}
+-			
+ 			IRawElementProviderSimple item;
+ 			try {
+ 				item = GridProvider.GetItem (row, 0);
+@@ -567,7 +429,7 @@ namespace UiaAtkBridge
+ 				return false;
+ 
+ 			ISelectionItemProvider selectionItem
+-				= (ISelectionItemProvider) item.GetPatternProvider (SelectionItemPatternIdentifiers.Pattern.Id);
++				= SelectionItemForCell (item);
+ 			if (selectionItem == null)
+ 				return false;
+ 			
+diff --git a/UiaAtkBridge/UiaAtkBridge/TextBoxEntryView.cs b/UiaAtkBridge/UiaAtkBridge/TextBoxEntryView.cs
+index ef4c76c..277e919 100644
+--- a/UiaAtkBridge/UiaAtkBridge/TextBoxEntryView.cs
++++ b/UiaAtkBridge/UiaAtkBridge/TextBoxEntryView.cs
+@@ -79,11 +79,6 @@ namespace UiaAtkBridge
+ 			}
+ 		}
+ 
+-		protected override void UpdateNameProperty (string newName, bool fromCtor)
+-		{
+-			if (IsTableCell)
+-				base.UpdateNameProperty (newName, fromCtor);
+-		}
+ 
+ 		protected override Atk.StateSet OnRefStateSet ()
+ 		{
+diff --git a/UiaAtkBridge/UiaAtkBridge/TextContainer.cs b/UiaAtkBridge/UiaAtkBridge/TextContainer.cs
+index 0cc3484..9bb9d0d 100644
+--- a/UiaAtkBridge/UiaAtkBridge/TextContainer.cs
++++ b/UiaAtkBridge/UiaAtkBridge/TextContainer.cs
+@@ -289,7 +289,7 @@ namespace UiaAtkBridge
+ 		}
+ 
+ 		// TODO: Remove next methods when atk-sharp is fixed (BNC#512477)
+-		public int GetSelectedColumns (out int selected)
++		public int GetSelectedColumns (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedColumns (out selected);
+ 		}
+@@ -299,7 +299,7 @@ namespace UiaAtkBridge
+ 			return tableExpert.GetSelectedColumns (out selected);
+ 		}
+ 
+-		public int GetSelectedRows (out int selected)
++		public int GetSelectedRows (out IntPtr selected)
+ 		{
+ 			return tableExpert.GetSelectedRows (out selected);
+ 		}
+diff --git a/UiaAtkBridge/UiaAtkBridge/Tree.cs b/UiaAtkBridge/UiaAtkBridge/Tree.cs
+index d9ed0c5..a01a4be 100644
+--- a/UiaAtkBridge/UiaAtkBridge/Tree.cs
++++ b/UiaAtkBridge/UiaAtkBridge/Tree.cs
+@@ -494,10 +494,9 @@ namespace UiaAtkBridge
+ 			get { return tableExpert.SelectedRows; }
+ 		}
+ 
+-		// TODO: Remove next methods when atk-sharp is fixed (BNC#512477)
+-		public int GetSelectedColumns (out int selected)
++				public int GetSelectedColumns (out IntPtr selected)
+ 		{
+-			selected = 0;
++			selected = IntPtr.Zero;
+ 			return 0;
+ 		}
+ 
+@@ -507,9 +506,9 @@ namespace UiaAtkBridge
+ 			return 0;
+ 		}
+ 
+-		public int GetSelectedRows (out int selected)
++		public int GetSelectedRows (out IntPtr selected)
+ 		{
+-			selected = 0;
++			selected = IntPtr.Zero;
+ 			return 0;
+ 		}
+ 
+diff --git a/UiaAtkBridge/bridge-glue/main.c b/UiaAtkBridge/bridge-glue/main.c
+index f78bfbd..5162da8 100644
+--- a/UiaAtkBridge/bridge-glue/main.c
++++ b/UiaAtkBridge/bridge-glue/main.c
+@@ -184,99 +184,78 @@ _remove_global_event_listener (guint remove_listener)
+   }
+ }
+ 
+-typedef void (*void_func)();
++/* AT-SPI2 exposes an adaptor API; GTK2 module discovery is obsolete. */
++#include <atk-bridge.h>
+ 
+-static gchar *
+-find_atk_bridge (const gchar *path)
++void
++gnome_accessibility_module_init (void)
+ {
+-  gchar *full_path = g_strconcat (path, "/modules/libatk-bridge.so", NULL);
+-  struct stat st;
++  if (atk_bridge_adaptor_init (NULL, NULL) != 0)
++    g_warning ("Could not initialize the AT-SPI2 accessibility adaptor");
++}
+ 
+-  if (stat (full_path, &st) == 0)
+-    return full_path;
+-  return NULL;
++void
++gnome_accessibility_module_shutdown (void)
++{
++  atk_bridge_adaptor_cleanup ();
+ }
+ 
+-static char *
+-get_path_from_var (const char *var)
++/* GLib external-main-loop integration. The caller owns the context on the UI
++ * thread for this object's entire lifetime; only bridge_loop_poll is a worker. */
++#include <errno.h>
++typedef struct {
++  GMainContext *context;
++  GPollFD *fds;
++  gint capacity;
++  gint count;
++  gint priority;
++  gint timeout;
++} BridgeLoop;
++
++BridgeLoop *bridge_loop_create (void)
+ {
+-  const gchar *value = g_getenv (var);
+-  gchar **values;
+-  gchar **ptr;
+-  gchar *path = NULL;
+-
+-  if (!value)
+-    return NULL;
+-
+-  values = g_strsplit (value, ":", 0);
+-  for (ptr = values; *ptr; ptr++)
+-    {
+-      if (!path)
+-        path = find_atk_bridge (*ptr);
+-      g_free (*ptr);
+-    }
+-  g_free (values);
+-  return path;
++  GMainContext *context = g_main_context_default ();
++  if (!g_main_context_acquire (context)) return NULL;
++  BridgeLoop *state = g_new0 (BridgeLoop, 1);
++  state->context = g_main_context_ref (context);
++  return state;
+ }
+ 
+-static const char *
+-get_bridge_path ()
++void bridge_loop_prepare (BridgeLoop *state)
+ {
+-  static const char *path = NULL;
+-
+-  if (path)
+-    return path;
+-
+-  /* Hack for OpenSUSE: Check GTK_PATH64 first */
+-  path = get_path_from_var ("GTK_PATH64");
+-  if (!path)
+-    path = get_path_from_var ("GTK_PATH");
+-  if (!path)
+-  path = g_strconcat (GTK_MODULES_DIR, "/libatk-bridge.so", NULL);
+-  return path;
++  g_main_context_prepare (state->context, &state->priority);
++  while (1) {
++    state->count = g_main_context_query (state->context, state->priority,
++        &state->timeout, state->fds, state->capacity);
++    if (state->count <= state->capacity) break;
++    state->capacity = state->count;
++    state->fds = g_renew (GPollFD, state->fds, state->capacity);
++  }
+ }
+ 
+-static void *
+-get_library ()
++void bridge_loop_poll (BridgeLoop *state)
+ {
+-  static void *library = NULL;
+-  const char *path;
+-
+-  if (library)
+-    return library;
+-  path = get_bridge_path ();
+-  library = dlopen (path, RTLD_LAZY);
+-  if (!library)
+-    g_warning ("libbridgeglue: Couldn't find atk-bridge: expecting %s\n", path);
+-  return library;
++  gint result;
++  do {
++    result = g_poll (state->fds, state->count, state->timeout);
++  } while (result < 0 && errno == EINTR);
+ }
+ 
+-void
+-gnome_accessibility_module_init ()
++void bridge_loop_dispatch (BridgeLoop *state)
+ {
+-  void *library = get_library ();
+-  void_func func;
+-
+-  if (!library)
+-    return;
+-  func = dlsym (library, "gnome_accessibility_module_init");
+-  if (func)
+-    func ();
+-  else
+-    g_warning ("libbridgeglue: Couldn't find gnome_accessibility_module_init");
++  if (g_main_context_check (state->context, state->priority, state->fds, state->count))
++    g_main_context_dispatch (state->context);
+ }
+ 
+-void
+-gnome_accessibility_module_shutdown ()
++void bridge_loop_wakeup (BridgeLoop *state)
+ {
+-  void *library = get_library ();
+-  void_func func;
+-
+-  if (!library)
+-    return;
+-  func = dlsym (library, "gnome_accessibility_module_shutdown");
+-  if (func)
+-    func ();
+-  else
+-    g_warning ("libbridgeglue: Couldn't find gnome_accessibility_module_shutdown");
++  g_main_context_wakeup (state->context);
++}
++
++void bridge_loop_free (BridgeLoop *state)
++{
++  g_main_context_release (state->context);
++  g_main_context_unref (state->context);
++  g_free (state->fds);
++  g_free (state);
+ }

@@ -914,6 +914,8 @@ namespace BizHawk.Client.EmuHawk
 		/// </summary>
 		private bool _skipNextAltRelease = true;
 
+		private bool _useWinFormsMessageLoop;
+
 		public int ProgramRunLoop()
 		{
 			// needs to be done late, after the log console snaps on top
@@ -934,7 +936,7 @@ namespace BizHawk.Client.EmuHawk
 
 			InitializeFpsData();
 
-			for (; ; )
+			bool RunIteration()
 			{
 				Input.Instance.Update();
 
@@ -957,7 +959,7 @@ namespace BizHawk.Client.EmuHawk
 
 					if (handled || ActiveForm is not FormBase afb) return;
 
-					if (isAltCombination)
+					if (isAltCombination && !_useWinFormsMessageLoop)
 					{
 						if (ie.LogicalButton.Button.Length == 1)
 						{
@@ -969,12 +971,12 @@ namespace BizHawk.Client.EmuHawk
 							afb.SendAltCombination(' ');
 						}
 					}
-					else if (ie.EventType is InputEventType.Press && ie.LogicalButton.Button == "Alt")
+					else if (!_useWinFormsMessageLoop && ie.EventType is InputEventType.Press && ie.LogicalButton.Button == "Alt")
 					{
 						// We will only do the alt release if the alt press itself was not already handled.
 						_skipNextAltRelease = false;
 					}
-					else if (ie.EventType is InputEventType.Release
+					else if (!_useWinFormsMessageLoop && ie.EventType is InputEventType.Release
 						&& !afb.BlocksInputWhenFocused
 						&& ie.LogicalButton.Button == "Alt"
 						&& !_skipNextAltRelease)
@@ -1034,8 +1036,37 @@ namespace BizHawk.Client.EmuHawk
 
 				if (IsDisposed || _windowClosedAndSafeToExitProcess)
 				{
-					break;
+					return false;
 				}
+				return true;
+			}
+
+			if (OSTailoredCode.IsUnixHost)
+			{
+				// Mono's DoEvents dispatches messages without keyboard preprocessing.
+				// Its normal pump is needed for menu arrows, Tab, and dialog mnemonics.
+				// Run one emulator iteration on idle, then wake the pump for the next.
+				void OnIdle(object sender, EventArgs e)
+				{
+					if (ActiveForm?.Modal == true || IsDisposed) return;
+					if (!RunIteration()) Application.ExitThread();
+					else BeginInvoke(() => { });
+				}
+				_useWinFormsMessageLoop = true;
+				Application.Idle += OnIdle;
+				try
+				{
+					Application.Run(this);
+				}
+				finally
+				{
+					Application.Idle -= OnIdle;
+					_useWinFormsMessageLoop = false;
+				}
+			}
+			else
+			{
+				while (RunIteration()) { }
 			}
 
 			Shutdown();
@@ -2170,7 +2201,7 @@ namespace BizHawk.Client.EmuHawk
 			// only check window messages a maximum of once per millisecond
 			// this check is irrelvant for the 99% of cases where fps are <1k
 			// but gives a slight fps boost in those scenarios
-			if ((uint)(currentTime - _lastMessageCheck).Milliseconds > 0)
+			if (!_useWinFormsMessageLoop && (uint)(currentTime - _lastMessageCheck).Milliseconds > 0)
 			{
 				_lastMessageCheck = currentTime;
 				Application.DoEvents();

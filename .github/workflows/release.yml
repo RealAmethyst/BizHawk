@@ -24,8 +24,24 @@ jobs:
       - name: Update version info
         run: Dist/UpdateVersionInfoForRelease.sh
 
+      - name: Install Linux speech build dependencies and Mono
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++-14 pkg-config libglibmm-2.68-dev libspeechd-dev mono-complete libatk-bridge2.0-dev python3 python3-gi gir1.2-atspi-2.0 xvfb libxtst6 dbus-x11 patch libsdl2-2.0-0 libopenal1 liblua5.4-0 libgdiplus libgtk-3-0 fonts-dejavu-core
+
+      - name: Build Linux speech library
+        env:
+          CXX: g++-14
+        run: Dist/BuildPrism.sh
+
+      - name: Build Linux menu accessibility
+        run: Dist/BuildLinuxAccessibility.sh
+
       - name: Build solution
         run: Dist/BuildRelease.sh
+
+      - name: Check Linux menus through AT-SPI
+        run: Dist/TestLinuxAccessibility.sh
 
       - name: Package (Linux)
         run: Dist/Package.sh
