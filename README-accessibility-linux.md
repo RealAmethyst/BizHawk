@@ -2,6 +2,10 @@
 
 This fork includes Lua speech through Prism and a bundled WinForms-to-AT-SPI bridge for Orca. Start Orca, then run `./EmuHawkMono.sh`. Use `./EmuHawkMono.sh --luaconsole` to open the Lua Console at startup. On a Wayland desktop, Mono's UI uses XWayland.
 
+## Long-session stability
+
+The Linux package includes a private Mono WinForms correction for a full X11 wake-up pipe. Pending callbacks and timers still run when the pipe already contains a wake notification. Start through `EmuHawkMono.sh` so this corrected assembly is loaded. The system Mono installation is unchanged.
+
 ## Runtime dependencies
 
 A 64-bit Linux system needs Mono, X11 or XWayland, OpenAL, Lua 5.4, GTK3, AT-SPI2, GLibmm 2.68, and Speech Dispatcher. The launch script uses the bridge shipped in `dll`; no system-wide Mono accessibility packages or GAC changes are required. The .NET SDK is needed to build, not to run the packaged application.
@@ -47,6 +51,7 @@ Install a .NET SDK 8 or newer, Mono development tools, CMake, Ninja, a C++23-cap
 ```sh
 Dist/BuildPrism.sh
 Dist/BuildLinuxAccessibility.sh
+Dist/BuildLinuxWinForms.sh
 Dist/BuildRelease.sh
 mono test_output/BizHawk.Tests.Client.Common.exe --filter FullyQualifiedName~config --minimum-expected-tests 8
 Dist/TestLinuxAccessibility.sh

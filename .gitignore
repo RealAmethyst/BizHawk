@@ -60,3 +60,8 @@ launchSettings.json
 /Assets/dll/*Sharp.dll
 /Assets/dll/libbridge-glue.so
 /Dist/LinuxAccessibility/tests/__pycache__/
+
+/Dist/winforms-build/
+/Assets/LinuxWinForms/
+/Assets/dll/System.Windows.Forms.dll
+/Dist/LinuxWinForms/__pycache__/

@@ -1,0 +1,16 @@
+diff --git a/mcs/class/System.Windows.Forms/System.Windows.Forms/XplatUIX11.cs b/mcs/class/System.Windows.Forms/System.Windows.Forms/XplatUIX11.cs
+index 2a53551..6903340 100644
+--- a/mcs/class/System.Windows.Forms/System.Windows.Forms/XplatUIX11.cs
++++ b/mcs/class/System.Windows.Forms/System.Windows.Forms/XplatUIX11.cs
+@@ -1228,6 +1228,11 @@ void SetIcon(Hwnd hwnd, Icon icon)
+ 		void WakeupMain () {
+ 			try {
+ 				wake.Write (new byte [] { 0xFF }, 0, 1);
++			} catch (UnixIOException ex) {
++				// A full nonblocking pipe already contains a pending wake notification.
++				if (ex.ErrorCode != Errno.EAGAIN && ex.ErrorCode != Errno.EWOULDBLOCK) {
++					throw;
++				}
+ 			} catch (SocketException ex) {
+ 				if (ex.SocketErrorCode != SocketError.WouldBlock) {
+ 					throw;

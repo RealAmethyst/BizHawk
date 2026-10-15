@@ -17,6 +17,8 @@ else
 	test -s output/dll/UiaAtkBridge.dll.config
 	test -s output/dll/libbridge-glue.so
 	test -s output/LinuxAccessibility/sources.tar.gz
+	test -s output/dll/System.Windows.Forms.dll
+	test -s output/LinuxWinForms/sources.tar.gz
 fi
 test -s output/Prism/LICENSE
 rm -fr "$targetDir" && mkdir -p "$targetDir"
@@ -30,11 +32,13 @@ cp ../README-accessibility-linux.md .
 rm -f */.keep
 if [ "${1:-linux-x64}" = "windows-x64" ]; then
 	rm -f "EmuHawkMono.sh"
-	rm -rf LinuxAccessibility
+	rm -rf LinuxAccessibility LinuxWinForms
 	cd "dll"
+	rm -f System.Windows.Forms.dll System.Windows.Forms.dll.config
 	rm -f *.so UIAutomation*.dll UiaAtkBridge.dll* GLibSharp.dll GioSharp.dll AtkSharp.dll CairoSharp.dll PangoSharp.dll GdkSharp.dll
 else
 	cp -R ../output/LinuxAccessibility .
+	cp -R ../output/LinuxWinForms .
 	# Game-script releases supply their own content; keep this location empty.
 	rm -rf Lua
 	mkdir Lua
