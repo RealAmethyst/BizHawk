@@ -46,6 +46,7 @@ namespace BizHawk.Client.EmuHawk
 
 			if (OSTailoredCode.IsUnixHost)
 			{
+				ConfigureLinuxAudioEnvironment(config.SoundDevice);
 				// if XAudio is chosen, use OpenAL, otherwise comply with the user's choice
 				_outputDevice = config.SoundOutputMethod == ESoundOutputMethod.Dummy
 					? new DummySoundOutput(this)
@@ -59,6 +60,24 @@ namespace BizHawk.Client.EmuHawk
 					ESoundOutputMethod.OpenAL => new OpenALSoundOutput(this, config.SoundDevice),
 					_ => new DummySoundOutput(this),
 				};
+			}
+		}
+
+		private static void ConfigureLinuxAudioEnvironment(string chosenDevice)
+		{
+			// OpenAL Soft's PipeWire backend resolves even a null device to the
+			// default sink and sets target.object, bypassing restored stream routes.
+			// Pulse leaves a null device to the server, including pipewire-pulse.
+			// Keep explicit backend/device choices; the comma retains fallback backends.
+			if (string.IsNullOrEmpty(chosenDevice) && Environment.GetEnvironmentVariable("ALSOFT_DRIVERS") is null)
+			{
+				Environment.SetEnvironmentVariable("ALSOFT_DRIVERS", "pulse,");
+			}
+
+			// Mono's executable name identifies unrelated managed applications too.
+			if (Environment.GetEnvironmentVariable("PULSE_PROP") is null)
+			{
+				Environment.SetEnvironmentVariable("PULSE_PROP", "application.name=BizHawk application.id=BizHawk");
 			}
 		}
 

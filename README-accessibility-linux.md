@@ -24,6 +24,10 @@ Frame-throttle waits service accessibility requests on the UI thread, as the Win
 
 Some other custom-painted tools, such as TAS input grids, still lack accessible rows. This work is not a claim that every advanced BizHawk tool is accessible. Amethyst's general accessibility approval does not establish coverage of every controller, core, or advanced tool.
 
+## Audio routing
+
+When no output device is selected inside BizHawk, Linux audio prefers OpenAL's Pulse backend, including PipeWire's Pulse compatibility server, so the server can restore the application's chosen output. The stream has a stable BizHawk identity. Choose the desired device in the desktop audio control once after updating, then test a fresh launch. Explicit BizHawk device selections and existing `ALSOFT_DRIVERS` or `PULSE_PROP` environment overrides are preserved. Other OpenAL backends remain available as fallbacks; routing restoration on those backends depends on their implementation.
+
 ## Lua speech
 
 Existing scripts use the same `speech.say`, `speech.output`, `speech.braille`, and `speech.stop` API. Prism tries Orca before Speech Dispatcher. Linux speech calls run on a dedicated worker while the UI thread continues answering AT-SPI queries. This prevents a circular wait when Orca needs information from BizHawk before replying to a speech request. Calls retain their order and finish before Lua continues; no emulator frames or keyboard input are dispatched by this wait.
