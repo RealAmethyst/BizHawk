@@ -13,6 +13,10 @@ if [ -z "${ATSPI_REGISTRY:-}" ]; then
 		fi
 	done
 fi
+probe_dir="$(mktemp -d)"
+trap 'rm -rf "$probe_dir"' EXIT HUP INT TERM
+mcs -out:"$probe_dir/AudioEnvironmentProbe.exe" Dist/LinuxAccessibility/tests/AudioEnvironmentProbe.cs
+MONO_PATH="$package/dll" mono "$probe_dir/AudioEnvironmentProbe.exe" "$package/EmuHawk.exe"
 timeout 120 dbus-run-session -- python3 Dist/LinuxAccessibility/tests/controls.py "$package"
 timeout 120 dbus-run-session -- python3 Dist/LinuxAccessibility/tests/bizhawk.py "$package"
 timeout 60 dbus-run-session -- python3 Dist/LinuxAccessibility/tests/speech.py "$package"
