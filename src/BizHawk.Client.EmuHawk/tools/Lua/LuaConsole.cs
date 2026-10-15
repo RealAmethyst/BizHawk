@@ -528,7 +528,7 @@ namespace BizHawk.Client.EmuHawk
 			if (_messageCount == MaxCount) message += "\nFlood warning! Message cap reached, suppressing output.\n";
 			OutputBox.BeginInvoke(() =>
 			{
-				OutputBox.Text += message;
+				OutputBox.AppendText(message ?? string.Empty);
 				OutputBox.SelectionStart = OutputBox.Text.Length;
 				OutputBox.ScrollToCaret();
 			});
