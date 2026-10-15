@@ -30,6 +30,8 @@ Existing scripts use the same `speech.say`, `speech.output`, `speech.braille`, a
 
 Native speech errors are reported in the Lua Console instead of an empty failure message.
 
+The Lua Console appends new output without rebuilding earlier history. This avoids progressively expensive document reconstruction during long script sessions. Complete output history remains available.
+
 Amethyst confirmed the Orca speech fix and Lua Console output navigation on October 7, 2026. The bridge correctly converts Mono's text-formatting values when Orca queries the log; these queries previously crashed the emulator.
 
 ## Safe defaults
