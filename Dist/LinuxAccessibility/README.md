@@ -24,6 +24,10 @@ UIA2ATK is pinned to `5ddfe947cec456315d7d91421f21c31c4afa6765` and GtkSharp to 
 - Convert Mono's floating-point text indents to ATK pixel values. Unboxing those values as integers previously crashed the process when Orca requested rich-text formatting, including while reading Lua Console output.
 - Restore bare-Alt menu activation on Mono 6.12. Its X11 prefilter clears the Alt state before constructing the key-release message. The bridge calls Mono's verified native menu handler only for an unmodified Alt tap; shortcuts, AltGr, and menu dismissal keep their normal handling.
 
+- Skip the property grid's painted border in keyboard navigation and use the form's tab order for Shift+Tab leaving the rows. Preserve row identities during cursor movement, expose focused name cells and property descriptions, and rebuild only for native content or structure changes.
+- Expose the property grid's native compound editor, including its text field and dropdown/dialog buttons. Keep the current property label and description on the editor controls; forward native text, selection and caret events before a value is committed.
+- Track toolbar item ownership as well as removal events. Mono clears property-grid toolbars without emitting item-removal events when resetting settings.
+
 ## Source and replacement libraries
 
 Linux distributions include `LinuxAccessibility/sources.tar.gz`, containing the corresponding modified UIA2ATK and GtkSharp source, generated bindings, and license notices. The `build` directory contains patches and build helpers. No system-wide GAC installation is required.
@@ -31,3 +35,5 @@ Linux distributions include `LinuxAccessibility/sources.tar.gz`, containing the 
 To rebuild from the included sources, extract the archive into a working directory, build `gtksharp/Source/Tools/Tools.sln` in Release, and run `python3 build/build-gtk.py /absolute/path/to/gtksharp`. Copy its `BuildOutput/Release/netstandard2.0/*.dll` into an empty destination directory, then run `python3 build/build-uia.py /absolute/path/to/uia2atk /absolute/path/to/destination`. Compile `uia2atk/UiaAtkBridge/bridge-glue/main.c` as a shared library using the `cc` command in `BuildLinuxAccessibility.sh`, and copy `build/UiaAtkBridge.dll.config` beside it. Replace the corresponding DLLs and `libbridge-glue.so` in the application's `dll` directory. Keep a backup of the installed libraries.
 
 UIA2ATK is MIT licensed; GtkSharp is LGPL licensed. These dynamically loaded libraries can be replaced independently of BizHawk. The bridge exposes standard WinForms controls; custom painted tools need their own accessible controls or providers.
+
+The standalone property-grid checks cover uncommitted text, caret and selection events, native editor buttons, and the actual melonDS settings converters and displayed enum choices. They construct settings objects without creating an emulator core.
